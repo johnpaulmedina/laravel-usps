@@ -1,13 +1,13 @@
 <?php
 
-namespace USPS;
+namespace Usps;
 
 /**
  * USPS Address Verify Class
  * used to verify an address is valid
  *
  * @since  1.0
- * @author Vincent Gabriel
+ * @author John Paul Medina
  */
 class AddressVerify extends USPSBase
 {

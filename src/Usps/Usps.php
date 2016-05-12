@@ -14,7 +14,33 @@ class Usps {
         $this->config = $config;
     }
 
-    public function test() {
-        return ['test' => 'valid'];
+    public function validate($street, $zip, $apartment = false, $city = false, $state = false) {
+        $verify = new AddressVerify($this->config['username']);
+        $address = new Address;
+        $address->setFirmName(null);
+        $address->setApt($apartment);
+        $address->setAddress($street);
+        $address->setCity($city);
+        $address->setState($state);
+        $address->setZip5($zip);
+        $address->setZip4('');
+
+        // Add the address object to the address verify class
+        $verify->addAddress($address);
+
+        // Perform the request and return result
+        $val1 = $verify->verify();
+        $val2 = $verify->getArrayResponse();
+
+        // var_dump($verify->isError());
+
+        // See if it was successful
+        if ($verify->isSuccess()) {
+            return ['address' => $val2['AddressValidateResponse']['Address']];
+        } else {
+            return ['error' => $verify->getErrorMessage()];
+        }
+
+        
     }
 }

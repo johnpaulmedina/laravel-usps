@@ -1,13 +1,13 @@
 <?php
 
-namespace USPS;
+namespace Usps;
 
 /**
  * USPS Address Class
  * used across other class to create addresses represented as objects
  *
  * @since  1.0
- * @author Vincent Gabriel
+ * @author John Paul Medina
  */
 class Address
 {

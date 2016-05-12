@@ -1,6 +1,6 @@
 <?php
 
-namespace USPS;
+namespace Usps;
 
 /**
  * Class InternationalLabel

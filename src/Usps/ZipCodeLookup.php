@@ -1,6 +1,6 @@
 <?php
 
-namespace USPS;
+namespace Usps;
 
 /**
  * USPS Zip code lookup by city/state

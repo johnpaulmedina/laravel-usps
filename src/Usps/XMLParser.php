@@ -1,6 +1,6 @@
 <?php
 
-namespace USPS;
+namespace Usps;
 
 /**
  * Array2XML: A class to convert array in PHP to XML

@@ -1,6 +1,6 @@
 <?php
 
-namespace USPS;
+namespace Usps;
 
 /**
  * XML2Array: A class to convert XML to array in PHP

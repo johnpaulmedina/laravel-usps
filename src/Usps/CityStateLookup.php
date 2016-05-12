@@ -1,6 +1,6 @@
 <?php
 
-namespace USPS;
+namespace Usps;
 
 /*
  * USPS City/State lookup
