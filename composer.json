@@ -16,7 +16,7 @@
     },
     "autoload": {
         "psr-0": {
-            "Jp\\Usps": "src/"
+            "Usps": "src/"
         }
     },
     "minimum-stability": "dev"

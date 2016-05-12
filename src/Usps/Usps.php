@@ -1,6 +1,6 @@
 <?php
 
-namespace Jp\Usps;
+namespace Usps;
 
 class Usps {
 
