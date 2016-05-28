@@ -1,14 +1,15 @@
 <?php
 
-namespace Usps;
-
 /**
- * USPS Base class
- * used to perform the actual api calls
+ * Based on Vincent Gabriel @VinceG USPS PHP-Api https://github.com/VinceG/USPS-php-api
  *
  * @since  1.0
+ * @author John Paul Medina
  * @author Vincent Gabriel
  */
+
+namespace Usps;
+
 abstract class USPSBase
 {
     const LIVE_API_URL = 'http://production.shippingapis.com/ShippingAPI.dll';

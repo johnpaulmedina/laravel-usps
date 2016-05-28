@@ -1,14 +1,15 @@
 <?php
 
-namespace Usps;
-
 /**
- * USPS Rate calculator class
- * used to get a rate for shipping methods
+ * Based on Vincent Gabriel @VinceG USPS PHP-Api https://github.com/VinceG/USPS-php-api
  *
  * @since  1.0
+ * @author John Paul Medina
  * @author Vincent Gabriel
  */
+
+namespace Usps;
+
 class Rate extends USPSBase
 {
     /**

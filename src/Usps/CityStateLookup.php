@@ -1,13 +1,18 @@
 <?php
 
-namespace Usps;
 
-/*
+/**
  * USPS City/State lookup
  * used to find a city/state by a zipcode lookup
- * @since 1.0
+ * Based on Vincent Gabriel @VinceG USPS PHP-Api https://github.com/VinceG/USPS-php-api
+ *
+ * @since  1.0
+ * @author John Paul Medina
  * @author Vincent Gabriel
  */
+
+namespace Usps;
+
 class CityStateLookup extends USPSBase
 {
     /**

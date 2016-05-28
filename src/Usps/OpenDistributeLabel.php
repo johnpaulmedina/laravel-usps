@@ -1,12 +1,16 @@
 <?php
 
-namespace Usps;
 
 /**
- * Class OpenDistributeLabel
+ * Based on Vincent Gabriel @VinceG USPS PHP-Api https://github.com/VinceG/USPS-php-api
  *
- * @package USPS
+ * @since  1.0
+ * @author John Paul Medina
+ * @author Vincent Gabriel
  */
+
+namespace Usps;
+
 class OpenDistributeLabel extends USPSBase
 {
     /**

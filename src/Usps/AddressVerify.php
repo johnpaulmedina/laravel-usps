@@ -1,14 +1,16 @@
 <?php
 
-namespace Usps;
-
 /**
- * USPS Address Verify Class
- * used to verify an address is valid
+ * Based on Vincent Gabriel @VinceG USPS PHP-Api https://github.com/VinceG/USPS-php-api
  *
  * @since  1.0
  * @author John Paul Medina
+ * @author Vincent Gabriel
+
  */
+
+namespace Usps;
+
 class AddressVerify extends USPSBase
 {
     /**

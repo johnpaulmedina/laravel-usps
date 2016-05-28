@@ -1,5 +1,15 @@
 <?php
 
+
+/**
+ * Based on Vincent Gabriel @VinceG USPS PHP-Api https://github.com/VinceG/USPS-php-api
+ *
+ * @since  1.0
+ * @author John Paul Medina
+ * @author Vincent Gabriel
+ */
+
+
 namespace Usps;
 
 /**
