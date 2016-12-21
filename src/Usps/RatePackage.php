@@ -1,14 +1,15 @@
 <?php
 
-namespace Usps;
-
 /**
- * USPS Rate Package
- * used by the ups rate class to create packages represented as objects
+ * Based on Vincent Gabriel @VinceG USPS PHP-Api https://github.com/VinceG/USPS-php-api
  *
  * @since  1.0
+ * @author John Paul Medina
  * @author Vincent Gabriel
  */
+
+namespace Usps;
+
 class RatePackage extends Rate
 {
     /**

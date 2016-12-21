@@ -7,6 +7,10 @@
         {
             "name": "John Paul Medina",
             "email": "medina.jpaul@gmail.com"
+        },
+        {
+            "name": "Vincent Gabriel",
+            "link": "https://github.com/VinceG"
         }
     ],
     "homepage":"https://github.com/johnpaulmedina/laravel-usps/",
