@@ -42,9 +42,6 @@ class Usps {
         $val1 = $verify->verify();
         $val2 = $verify->getArrayResponse();
 
-        \Log::debug($val1);
-        \Log::debug($val2);
-
         // var_dump($verify->isError());
 
         // See if it was successful
