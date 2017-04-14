@@ -24,15 +24,16 @@ class Usps {
         $this->config = $config;
     }
 
-    public function validate($street, $zip, $apartment = false, $city = false, $state = false) {
+    public function validate($request) {
+
         $verify = new AddressVerify($this->config['username']);
         $address = new Address;
         $address->setFirmName(null);
-        $address->setApt($apartment);
-        $address->setAddress($street);
-        $address->setCity($city);
-        $address->setState($state);
-        $address->setZip5($zip);
+        $address->setApt( (array_key_exists('Apartment', $request) ? $request['Apartment'] : null ) );
+        $address->setAddress( (array_key_exists('Address', $request) ? $request['Address'] : null ) );
+        $address->setCity( (array_key_exists('City', $request) ? $request['City'] : null ) );
+        $address->setState( (array_key_exists('State', $request) ? $request['State'] : null ) );
+        $address->setZip5( (array_key_exists('Zip', $request) ? $request['Zip'] : null ) );
         $address->setZip4('');
 
         // Add the address object to the address verify class
@@ -51,6 +52,6 @@ class Usps {
             return ['error' => $verify->getErrorMessage()];
         }
 
-        
+
     }
 }
