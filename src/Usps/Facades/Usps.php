@@ -11,6 +11,6 @@ class Usps extends Facade {
      *
      * @return string
      */
-    protected static function getFacadeAccessor() { return 'usps'; }
+    protected static function getFacadeAccessor() { return \Usps\Usps::class; }
 
 }
