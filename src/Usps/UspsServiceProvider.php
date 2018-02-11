@@ -28,12 +28,15 @@ class UspsServiceProvider extends ServiceProvider {
      */
     public function register()
     {
-        $this->app['usps'] = $this->app->share(function($app)
-        {
+
+        // Register manager for usage with the Facade.
+        $this->app->singleton('usps', function () {
             $config = \Config::get('services.usps');
+            if (!array($config)) {
+                throw new \Exception('USPS: Invalid configuration defined in services.php.');
+            }
             return new Usps($config);
         });
-
     }
 
     /**

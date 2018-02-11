@@ -1,6 +1,6 @@
 {
     "name": "johnpaulmedina/laravel-usps",
-    "description": "USPS API for Laravel 5",
+    "description": "USPS API for Laravel 5.4",
     "type": "library",
     "keywords": ["usps","laravel","laravel5","laravel usps"],
     "authors": [
@@ -16,7 +16,8 @@
     "homepage":"https://github.com/johnpaulmedina/laravel-usps/",
     "license": "MIT",
     "require": {
-        "php": ">=5.4.0"
+        "php": ">=7.1.0",
+        "illuminate/support": "~5.4"
     },
     "autoload": {
         "psr-0": {
