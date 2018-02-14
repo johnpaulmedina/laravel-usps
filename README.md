@@ -14,7 +14,9 @@ composer require johnpaulmedina/laravel-usps:dev-master
 ```
 ## Laravel integration
 
-To wire this up in your Laravel project you need to add the service provider.
+For Laravel 5.5 and later, this package will be auto discovered and registered.
+
+To wire this up in your Laravel 5.4 project you need to add the service provider.
 Open `config/app.php`, and add a new item to the providers array.
 
 ```php
