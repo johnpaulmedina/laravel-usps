@@ -70,7 +70,7 @@ class Usps {
             $trackConfirm->setRevision(request()->getClientIp(), $sourceId);
         }
 
-        collect(is_array($ids)?: [ $ids ])->each(function ($id) use ($trackConfirm) {
+        collect(is_array($ids)? $ids : [ $ids ])->each(function ($id) use ($trackConfirm) {
             $trackConfirm->addPackage($id);
         });
 
