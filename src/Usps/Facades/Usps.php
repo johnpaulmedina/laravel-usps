@@ -1,6 +1,6 @@
 <?php
 
-namespace Usps\Facades;
+namespace Johnpaulmedina\Usps\Facades;
 
 use Illuminate\Support\Facades\Facade;
 

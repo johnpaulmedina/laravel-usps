@@ -11,7 +11,7 @@
 
  */
 
-namespace Usps;
+namespace Johnpaulmedina\Usps;
 
 class Address
 {

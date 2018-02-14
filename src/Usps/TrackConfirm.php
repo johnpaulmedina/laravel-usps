@@ -8,7 +8,7 @@
  * @author Vincent Gabriel
  */
 
-namespace Usps;
+namespace Johnpaulmedina\Usps;
 
 class TrackConfirm extends USPSBase
 {
@@ -16,6 +16,10 @@ class TrackConfirm extends USPSBase
      * @var string - the api version used for this type of call
      */
     protected $apiVersion = 'TrackV2';
+    /**
+     * @var array - additional request parameters for Revision 1
+     */
+    protected $requestData = [];
     /**
      * @var array - list of all packages added so far
      */
@@ -43,7 +47,7 @@ class TrackConfirm extends USPSBase
      */
     public function getPostFields()
     {
-        return $this->packages;
+        return array_merge($this->requestData, $this->packages);
     }
 
     /**
@@ -55,5 +59,20 @@ class TrackConfirm extends USPSBase
     public function addPackage($id)
     {
         $this->packages['TrackID'][] = ['@attributes' => ['ID' => $id]];
+    }
+
+    /**
+     * Set revision ID and additional required fields
+     *
+     * @param string $clientIp
+     * @param string $sourceId
+     * @param int $revisionId
+     * @return void
+     */
+    public function setRevision($clientIp, $sourceId, $revisionId = 1)
+    {
+        $this->requestData['Revision'] = $revisionId;
+        $this->requestData['ClientIp'] = $clientIp;
+        $this->requestData['SourceId'] = $sourceId;
     }
 }

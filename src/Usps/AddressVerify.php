@@ -9,7 +9,7 @@
 
  */
 
-namespace Usps;
+namespace Johnpaulmedina\Usps;
 
 class AddressVerify extends USPSBase
 {
