@@ -21,7 +21,7 @@
     },
     "autoload": {
         "psr-0": {
-            "Usps": "src/"
+            "Johnpaulmedina\Usps": "src/"
         }
     },
     "minimum-stability": "dev"

@@ -10,11 +10,9 @@
  * @author Vincent Gabriel
  */
 
-namespace Usps;
+namespace Johnpaulmedina\Usps;
 
-function __autoload($class_name) {
-    include $class_name . '.php';
-}
+use Johnpaulmedina\Usps\Exceptions\UspsTrackConfirmException;
 
 class Usps {
 
@@ -53,5 +51,34 @@ class Usps {
         }
 
 
+    }
+
+    /**
+     * @param $ids array|string
+     * @param $sourceId null|string
+     *
+     * @return array
+     * @throws UspsTrackConfirmException
+     */
+    public function trackConfirm($ids, $sourceId = null)
+    {
+        $trackConfirm = new TrackConfirm($this->config['username']);
+        $trackConfirm->setTestMode(empty($this->config['testmode']) ? false : true);
+
+        if ($sourceId) {
+            // Assume revision 1 tracking is desired when sourceId supplied
+            $trackConfirm->setRevision(request()->getClientIp(), $sourceId);
+        }
+
+        collect(is_array($ids)?: [ $ids ])->each(function ($id) use ($trackConfirm) {
+            $trackConfirm->addPackage($id);
+        });
+
+        $trackConfirm->getTracking();
+        if ($trackConfirm->isError()) {
+            throw new UspsTrackConfirmException($trackConfirm->getErrorMessage(), $trackConfirm->getErrorCode());
+        }
+
+        return $trackConfirm->getArrayResponse();
     }
 }
