@@ -17,11 +17,21 @@
     "license": "MIT",
     "require": {
         "php": ">=7.1.0",
-        "illuminate/support": "~5.4"
+        "illuminate/support": "~5.4|~5.5|~5.6"
     },
     "autoload": {
-        "psr-0": {
-            "Johnpaulmedina\Usps": "src/"
+        "psr-4": {
+            "Johnpaulmedina\\Usps\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Johnpaulmedina\\Usps\\UspsServiceProvider"
+            ],
+            "aliases": {
+                "Usps": "Johnpaulmedina\\Usps\\Facades\\Usps"
+            }
         }
     },
     "minimum-stability": "dev"
