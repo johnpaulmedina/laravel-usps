@@ -8,7 +8,7 @@
  * @author Vincent Gabriel
  */
 
-namespace Usps;
+namespace Johnpaulmedina\Usps;
 
 class PriorityMailServiceStandards extends USPSBase
 {

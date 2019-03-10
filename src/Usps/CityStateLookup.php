@@ -11,7 +11,7 @@
  * @author Vincent Gabriel
  */
 
-namespace Usps;
+namespace Johnpaulmedina\Usps;
 
 class CityStateLookup extends USPSBase
 {

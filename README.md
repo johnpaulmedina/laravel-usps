@@ -14,16 +14,18 @@ composer require johnpaulmedina/laravel-usps:dev-master
 ```
 ## Laravel integration
 
-To wire this up in your Laravel project you need to add the service provider.
+For Laravel 5.5 and later, this package will be auto discovered and registered.
+
+To wire this up in your Laravel 5.4 project you need to add the service provider.
 Open `config/app.php`, and add a new item to the providers array.
 
 ```php
-'Usps\UspsServiceProvider',
+Johnpaulmedina\Usps\UspsServiceProvider::class,
 ```
 Then you must also specify the alias in `config/app.php`. Add a new item to the Aliases array.
 
 ```php
-'Usps' => 'Usps\Facades\Usps',
+'Usps' => Johnpaulmedina\Usps\Facades\Usps::class,
 ```
 This will allow integration by adding the Facade `Use Usps;` 
 
@@ -32,8 +34,9 @@ Add your USPS username config in `config/services.php`.
 
 ```php
 'usps' => [
-		'username' => "XXXXXXXXXXXX"
-	]
+		'username' => "XXXXXXXXXXXX",
+		'testmode' => false,
+	],
 ```
 
 ## Example Controller Usage
@@ -57,6 +60,23 @@ class USPSController extends Controller
                 Request::input('Apartment'), 
                 Request::input('City'), 
                 Request::input('State')
+            )
+        );
+    }
+
+    public function trackConfirm() {
+        return response()->json(
+            Usps::trackConfirm( 
+                Request::input('id')
+            )
+        );
+    }
+
+    public function trackConfirmRevision1() {
+        return response()->json(
+            Usps::trackConfirm( 
+                Request::input('id'),
+                'Acme, Inc'
             )
         );
     }
