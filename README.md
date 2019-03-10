@@ -83,6 +83,11 @@ class USPSController extends Controller
 }
 ```
 
+Contributors
+============
+@pdbreen - Special thanks for cleaning up the package and adding the tracking methods
+
+
 @VinceG Original README.MD
 
 USPS PHP API
@@ -111,7 +116,3 @@ Requirements
 Authors
 =======
 - Vincent Gabriel <http://vadimg.com> (Original PHP-Wrapper)
-
-Contributors
-============
-@pdbreen
