@@ -111,3 +111,7 @@ Requirements
 Authors
 =======
 - Vincent Gabriel <http://vadimg.com> (Original PHP-Wrapper)
+
+Contributors
+============
+@pdbreen
