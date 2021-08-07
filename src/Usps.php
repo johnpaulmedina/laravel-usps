@@ -107,7 +107,7 @@ class Usps {
         if ($rate->isSuccess()) {
             return ['rate' => $val2['RateValidateResponse']['Rate']];
         } else {
-            return ['error' => $verify->getErrorMessage()];
+            return ['error' => $rate->getErrorMessage()];
         }
             
         
