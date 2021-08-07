@@ -82,17 +82,17 @@ class Usps {
         return $trackConfirm->getArrayResponse();
     }
     
-    public function rate($request){
+    public function rate(Request $request){
         $rate = new Rate($this->config['username']);
         $ratepackage = new RatePackage();
-        $ratepackage->setService((array_key_exists('Service', $request) ? $request['Service'] : null ));
-         $ratepackage->setFirstClassMailType((array_key_exists('FirstClassMailType', $request) ? $request['FirstClassMailType'] : null ));
-         $ratepackage->setZipOrigination((array_key_exists('ZipOrigination', $request) ? $request['ZipOrigination'] : null ));
-         $ratepackage->setZipDestination((array_key_exists('ZipDestination', $request) ? $request['ZipDestination'] : null ));
-         $ratepackage->setPounds((array_key_exists('Pounds', $request) ? $request['Pounds'] : null ));
-         $ratepackage->setOunces((array_key_exists('Ounces', $request) ? $request['Ounces'] : null ));
-         $ratepackage->setContainer((array_key_exists('Container', $request) ? $request['Container'] : null ));
-         $ratepackage->setSize((array_key_exists('Size', $request) ? $request['Size'] : null ));
+        $ratepackage->setService($request->Service);
+         $ratepackage->setFirstClassMailType($request->FirstClassMailType);
+         $ratepackage->setZipOrigination($request->ZipOrigination);
+         $ratepackage->setZipDestination($request->ZipDestination);
+         $ratepackage->setPounds($request->Pounds);
+         $ratepackage->setOunces($request->Ounces);
+         $ratepackage->setContainer($request->Container);
+         $ratepackage->setSize($request->Size);
         
         // Add the Package object to the Rate Package class
         $rate->addPackage($ratepackage);
