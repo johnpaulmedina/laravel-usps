@@ -82,7 +82,7 @@ class Usps {
         return $trackConfirm->getArrayResponse();
     }
     
-    public function ratepackage($request){
+    public function rate($request){
         $rate = new Rate($this->config['username']);
         $ratepackage = new RatePackage();
         $ratepackage->setService((array_key_exists('Service', $request) ? $request['Service'] : null ));
@@ -95,7 +95,21 @@ class Usps {
          $ratepackage->setSize((array_key_exists('Size', $request) ? $request['Size'] : null ));
         
         // Add the Package object to the Rate Package class
-        $rate->addPackage()
+        $rate->addPackage($ratepackage);
+        
+          // Perform the request and return result
+        $val1 = $rate->getRate();
+        $val2 = $rate->getArrayResponse();
+
+        // var_dump($verify->isError());
+
+        // See if it was successful
+        if ($rate->isSuccess()) {
+            return ['rate' => $val2['RateValidateResponse']['Rate']];
+        } else {
+            return ['error' => $verify->getErrorMessage()];
+        }
+            
         
     }
 }
