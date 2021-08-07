@@ -82,7 +82,7 @@ class Usps {
         return $trackConfirm->getArrayResponse();
     }
     
-    public function ratepackage(){
+    public function ratepackage($request){
         $rate = new Rate($this->config['username']);
         $ratepackage = new RatePackage();
         $ratepackage->setService((array_key_exists('Service', $request) ? $request['Service'] : null ));
