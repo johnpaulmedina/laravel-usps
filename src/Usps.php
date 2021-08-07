@@ -85,7 +85,7 @@ class Usps {
     public function rate($request){
         $rate = new Rate($this->config['username']);
         $ratepackage = new RatePackage();
-        $ratepackage->setService((array_key_exists('Service', $request) ? $request['Service'] : null );
+        $ratepackage->setService((array_key_exists('Service', $request) ? $request['Service'] : null ));
          $ratepackage->setFirstClassMailType((array_key_exists('FirstClassMailType', $request) ? $request['FirstClassMailType'] : null ));
          $ratepackage->setZipOrigination((array_key_exists('ZipOrigination', $request) ? $request['ZipOrigination'] : null ));
          $ratepackage->setZipDestination($(array_key_exists('ZipDestination', $request) ? $request['ZipDestination'] : null ));
