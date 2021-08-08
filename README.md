@@ -40,7 +40,7 @@ Add your USPS username config in `config/services.php`.
 ```
 
 ## Example Controller Usage
-The only method completed for Laravel is the `Usps::validate` which is defined in `vendor/johnpaulmedina/laravel-usps/src/Usps/Usps.php`. As this package was developed for internal use I did not bring over all the features but you are more than welcome to contribute the methods you need and I will merge them. I suggest looking at the original PHP-Wrapper by @VinceG [USPS PHP-Api](https://github.com/VinceG/USPS-php-api "USPS PHP-Api by VinceG") as I ported those clases and autoloaded them to use in the `Usps.php` file.
+The only method completed for Laravel is the `Usps::validate`, `Usps::rate` which is defined in `vendor/johnpaulmedina/laravel-usps/src/Usps/Usps.php`. As this package was developed for internal use I did not bring over all the features but you are more than welcome to contribute the methods you need and I will merge them. I suggest looking at the original PHP-Wrapper by @VinceG [USPS PHP-Api](https://github.com/VinceG/USPS-php-api "USPS PHP-Api by VinceG") as I ported those clases and autoloaded them to use in the `Usps.php` file.
 ```php
 <?php
 
@@ -80,6 +80,35 @@ class USPSController extends Controller
             )
         );
     }
+    
+    public function rate() {
+    
+        $usps_rate = Usps::rate(
+            [
+                'Service' => $request->input('Service', 'PRIORITY COMMERCIAL'),
+                'FirstClassMailType' => $request->input('FirstClassMailType', ''),
+                'ZipOrigination' => $request->input('ZipOrigination', '91601'),
+                'ZipDestination' => $request->input('ZipDestination', $zipcode),
+                'Pounds' => $request->input('Pounds', $weight),
+                'Ounces' => $request->input('Ounces', 0),
+                'Container' => $request->input('Container', 'VARIABLE'),
+                'Machinable' => $request->input('Machinable', 'True'),
+            ]
+        );
+
+
+        $usps_return_rate = Arr::get($usps_rate, 'rate.RateV4Response.Package.Postage.Rate');
+        $usps_return_weight = Arr::get($usps_rate, 'rate.RateV4Response.Package.Pounds');
+
+
+        return response()->json([
+            'rate' => $usps_return_rate,
+            'weight'=> $usps_return_weight,
+            'usps' => $usps_rate
+        ]);
+	
+    }
+    
 }
 ```
 
@@ -88,6 +117,7 @@ Contributors
 @pdbreen
 @bredmor
 @scs-ben
+@daveore090
 
 @VinceG Original README.MD
 
@@ -112,6 +142,7 @@ Requirements
 - PHP >= 7.2.5 configured with the following extensions:
   - cURL
 - USPS API Username
+- - Laravel 8
 
 
 Authors
