@@ -161,7 +161,7 @@ class RatePackage extends Rate
     
     public function setMachinable($value)
     {
-        return $this->setField('Size', $value);
+        return $this->setField('Machinable', $value);
     }
 
     /**
