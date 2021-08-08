@@ -93,6 +93,8 @@ class Usps {
          $ratepackage->setOunces((array_key_exists('Ounces', $request) ? $request['Ounces'] : null ));
          $ratepackage->setContainer((array_key_exists('Container', $request) ? $request['Container'] : null ));
          $ratepackage->setSize((array_key_exists('Size', $request) ? $request['Size'] : null ));
+         $ratepackage->setMachinable((array_key_exists('Machinable', $request) ? $request['Machinable'] : null ));
+        
         
         // Add the Package object to the Rate Package class
         $rate->addPackage($ratepackage);
