@@ -105,7 +105,7 @@ class Usps {
 
         // See if it was successful
         if ($rate->isSuccess()) {
-            return ['rate' => $val2;
+            return ['rate' => $val2];
         } else {
             return ['error' => $rate->getErrorMessage()];
         }
