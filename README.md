@@ -139,10 +139,9 @@ This wrapper allows you to perform some basic calls to the USPS api. Some of the
 Requirements
 ============
 
-- PHP >= 7.2.5 configured with the following extensions:
-  - cURL
+- PHP >= 8.0.2
 - USPS API Username
-- - Laravel 8
+- - Laravel 9
 
 
 Authors
