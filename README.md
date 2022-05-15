@@ -3,7 +3,7 @@
 Laravel-USPS is a composer package that allows you to integrate the USPS Address / Shipping API. This package is ported from @author Vincent Gabriel https://github.com/VinceG/USPS-php-api
 
   - Requires a valid USPS API Username
-  - Tested on Laravel 6
+  - Tested on Laravel 5.4
 
 ## Installation
 
