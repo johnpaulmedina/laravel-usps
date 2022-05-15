@@ -46,7 +46,9 @@ class UspsServiceProvider extends ServiceProvider {
      */
     public function provides()
     {
-        return array('usps');
+        return [
+            Usps::class
+        ];
     }
 
 }
