@@ -179,7 +179,7 @@ abstract class USPSBase
         }
 
         $opts                     = self::$CURL_OPTS;
-        $opts[CURLOPT_POSTFIELDS] = http_build_query($this->getPostData(), null, '&');
+        $opts[CURLOPT_POSTFIELDS] = http_build_query($this->getPostData(), '', '&');
         $opts[CURLOPT_URL]        = $this->getEndpoint();
 
         // Replace 443 with 80 if it's not secured
