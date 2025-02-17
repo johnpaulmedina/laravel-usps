@@ -18,11 +18,11 @@
             "link": "https://github.com/VinceG"
         }
     ],
-    "homepage":"https://github.com/johnpaulmedina/laravel-usps/",
+    "homepage": "https://github.com/johnpaulmedina/laravel-usps/",
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "illuminate/support": "^11.0"
+        "illuminate/support": "^11.0|^12.0"
     },
     "autoload": {
         "psr-4": {
