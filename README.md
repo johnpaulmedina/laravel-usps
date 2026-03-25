@@ -44,6 +44,30 @@ USPS_CLIENT_ID=your-client-id
 USPS_CLIENT_SECRET=your-client-secret
 ```
 
+## Artisan Commands
+
+```bash
+# Validate an address
+php artisan usps:validate "1600 Pennsylvania Ave NW" --state=DC --zip=20500
+
+# Track packages
+php artisan usps:track 9400111899223456789012
+
+# ZIP code lookup (city/state)
+php artisan usps:zip 33101
+
+# Calculate shipping rates
+php artisan usps:price 20500 33101 16 --mail-class=PRIORITY_MAIL
+
+# Delivery estimates
+php artisan usps:standards 20500 33101
+
+# Find USPS locations
+php artisan usps:locations 33101 --type=post-office --radius=5
+```
+
+All commands output formatted tables to the console.
+
 ## Usage
 
 All API domains are accessible via the `Usps` facade. Address methods are called directly; all other domains are accessed through fluent accessor methods that return typed API clients.
@@ -419,28 +443,6 @@ $form = Usps::scanForms()->createManifestMidShipment([
 | Appointments | `appointments()` | 4 |
 | Shipping Options | `shippingOptions()` | 1 |
 | SCAN Forms | `scanForms()` | 3 |
-
-## Artisan Commands
-
-```bash
-# Validate an address
-php artisan usps:validate "1600 Pennsylvania Ave NW" --state=DC --zip=20500
-
-# Track packages
-php artisan usps:track 9400111899223456789012
-
-# ZIP code lookup (city/state)
-php artisan usps:zip 33101
-
-# Calculate shipping rates
-php artisan usps:price 20500 33101 16 --mail-class=PRIORITY_MAIL
-
-# Delivery estimates
-php artisan usps:standards 20500 33101
-
-# Find USPS locations
-php artisan usps:locations 33101 --type=post-office --radius=5
-```
 
 ## Authentication
 
