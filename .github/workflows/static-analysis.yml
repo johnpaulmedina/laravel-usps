@@ -38,15 +38,12 @@ jobs:
               paths:
                   - src
               level: 5
+              reportUnmatchedIgnoredErrors: false
               ignoreErrors:
-                  - '#Call to an undefined method Illuminate\\Http\\Client\\Response::#'
-                  - '#Property .* on left side of \?\? is not nullable#'
-                  - '#Match expression does not handle remaining value#'
-                  - '#Offset .* in isset\(\) always exists#'
-                  - '#Strict comparison .* will always evaluate to#'
-                  - '#Offset .* in isset\(\) does not exist#'
+                  - '#is used zero times and is not analysed#'
               excludePaths:
                   - src/Usps/Http/Controllers
+                  - src/Usps/Http/Requests
           NEON
 
       - name: Run PHPStan

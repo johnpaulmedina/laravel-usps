@@ -85,7 +85,7 @@ abstract class USPSBase
     /**
      * Make an authenticated POST request to the USPS API.
      *
-     * @param array<string, mixed> $data
+     * @param array<mixed> $data
      * @param array<string, string> $headers
      * @return array<string, mixed>
      */
