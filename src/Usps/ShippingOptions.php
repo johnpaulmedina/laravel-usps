@@ -36,7 +36,7 @@ class ShippingOptions extends USPSBase
     {
         $required = ['originZIPCode', 'destinationZIPCode', 'weight', 'length', 'width', 'height'];
         foreach ($required as $field) {
-            if (!isset($options[$field]) || $options[$field] === '' || $options[$field] === null) {
+            if (!array_key_exists($field, $options) || empty($options[$field])) {
                 throw new \InvalidArgumentException("Missing required field: {$field}.");
             }
         }
