@@ -10,8 +10,11 @@
 
 namespace Johnpaulmedina\Usps;
 
+use Johnpaulmedina\Usps\Validation\ValidatesZipCodes;
+
 class AddressVerify extends USPSBase
 {
+    use ValidatesZipCodes;
     protected array $addresses = [];
 
     public function addAddress(Address $address): self

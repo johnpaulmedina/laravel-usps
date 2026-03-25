@@ -41,7 +41,8 @@ class InternationalLabels extends USPSBase
      */
     public function reprintLabel(string $trackingNumber, array $reprintData, string $paymentToken): array
     {
-        return $this->apiPost("/international-labels/v3/international-label-reprint/{$trackingNumber}", $reprintData, [
+        $encoded = rawurlencode($trackingNumber);
+        return $this->apiPost("/international-labels/v3/international-label-reprint/{$encoded}", $reprintData, [
             'X-Payment-Authorization-Token' => $paymentToken,
         ]);
     }
@@ -54,7 +55,8 @@ class InternationalLabels extends USPSBase
      */
     public function cancelLabel(string $trackingNumber): array
     {
-        return $this->apiDelete("/international-labels/v3/international-label/{$trackingNumber}");
+        $encoded = rawurlencode($trackingNumber);
+        return $this->apiDelete("/international-labels/v3/international-label/{$encoded}");
     }
 
     /**

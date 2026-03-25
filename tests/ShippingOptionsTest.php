@@ -115,4 +115,69 @@ class ShippingOptionsTest extends TestCase
         $this->assertTrue($client->isError());
         $this->assertEquals('Invalid origin ZIP code.', $client->getErrorMessage());
     }
+
+    public function test_search_throws_for_missing_required_field(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Missing required field: weight.');
+
+        $this->client()->search([
+            'originZIPCode' => '20500',
+            'destinationZIPCode' => '33101',
+            'length' => 6,
+            'width' => 4,
+            'height' => 2,
+        ]);
+    }
+
+    public function test_search_throws_for_negative_weight(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('weight must be greater than 0');
+
+        $this->client()->search([
+            'originZIPCode' => '20500',
+            'destinationZIPCode' => '33101',
+            'weight' => -1,
+            'length' => 6,
+            'width' => 4,
+            'height' => 2,
+        ]);
+    }
+
+    public function test_search_normalizes_zip_codes(): void
+    {
+        Http::fake([
+            'apis.usps.com/shipments/v3/options/search' => Http::response(['options' => []]),
+        ]);
+
+        $this->client()->search([
+            'originZIPCode' => '205-00',
+            'destinationZIPCode' => '331 01',
+            'weight' => 1.0,
+            'length' => 6,
+            'width' => 4,
+            'height' => 2,
+        ]);
+
+        Http::assertSent(function ($request) {
+            $body = $request->data();
+            return $body['originZIPCode'] === '20500'
+                && $body['destinationZIPCode'] === '33101';
+        });
+    }
+
+    public function test_search_throws_for_non_numeric_weight(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->client()->search([
+            'originZIPCode' => '20500',
+            'destinationZIPCode' => '33101',
+            'weight' => 'abc',
+            'length' => 6,
+            'width' => 4,
+            'height' => 2,
+        ]);
+    }
 }

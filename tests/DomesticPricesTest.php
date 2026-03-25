@@ -74,4 +74,38 @@ class DomesticPricesTest extends TestCase
         $result = $this->api()->letterRateSearch(['weight' => 1.0]);
         $this->assertArrayHasKey('price', $result);
     }
+
+    public function test_base_rate_search_throws_for_negative_weight(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('weight must be greater than 0');
+
+        $this->api()->baseRateSearch(['originZIPCode' => '20500', 'weight' => -1]);
+    }
+
+    public function test_base_rate_search_throws_for_non_numeric_weight(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('weight must be numeric');
+
+        $this->api()->baseRateSearch(['weight' => 'abc']);
+    }
+
+    public function test_base_rate_search_allows_missing_weight(): void
+    {
+        Http::fake([
+            'apis.usps.com/prices/v3/base-rates/search' => Http::response(['totalBasePrice' => 5.00]),
+        ]);
+
+        $result = $this->api()->baseRateSearch(['originZIPCode' => '20500']);
+        $this->assertArrayHasKey('totalBasePrice', $result);
+    }
+
+    public function test_total_rate_search_throws_for_zero_weight(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('weight must be greater than 0');
+
+        $this->api()->totalRateSearch(['weight' => 0]);
+    }
 }

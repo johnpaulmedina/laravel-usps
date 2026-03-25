@@ -49,6 +49,42 @@ class AdjustmentsDisputesTest extends TestCase
         Http::assertSent(fn ($r) => str_contains($r->url(), 'destinationZIPCode=33101'));
     }
 
+    public function test_get_adjustments_throws_for_invalid_event_type(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid eventType: INVALID');
+
+        $api = new Adjustments('test-id', 'test-secret');
+        $api->getAdjustments('12345678', '920011234561234567890', 'INVALID');
+    }
+
+    public function test_get_adjustments_normalizes_event_type_case(): void
+    {
+        Http::fake([
+            'apis.usps.com/adjustments/v3/adjustments/*/*/*' => Http::response([]),
+        ]);
+
+        $api = new Adjustments('test-id', 'test-secret');
+        $api->getAdjustments('12345678', '920011234561234567890', 'census');
+
+        Http::assertSent(fn ($r) => str_contains($r->url(), '/CENSUS'));
+    }
+
+    public function test_get_adjustments_accepts_all_valid_event_types(): void
+    {
+        Http::fake([
+            'apis.usps.com/adjustments/v3/adjustments/*/*/*' => Http::response([]),
+        ]);
+
+        $api = new Adjustments('test-id', 'test-secret');
+
+        foreach (['CENSUS', 'DUPLICATES', 'UNMANIFESTED'] as $type) {
+            $api->getAdjustments('12345678', '920011234561234567890', $type);
+        }
+
+        Http::assertSentCount(3);
+    }
+
     public function test_create_dispute(): void
     {
         Http::fake([

@@ -114,6 +114,31 @@ class ServiceStandardsTest extends TestCase
         $this->assertArrayHasKey('signedURL', $result);
     }
 
+    public function test_get_estimates_normalizes_zip_with_spaces(): void
+    {
+        Http::fake([
+            'apis.usps.com/service-standards/v3/estimates*' => Http::response([]),
+        ]);
+
+        $ss = new ServiceStandards('test-id', 'test-secret');
+        $ss->getEstimates('205 00', '331-01');
+
+        Http::assertSent(fn ($r) => str_contains($r->url(), 'originZIPCode=20500')
+            && str_contains($r->url(), 'destinationZIPCode=33101'));
+    }
+
+    public function test_get_standards_normalizes_zip(): void
+    {
+        Http::fake([
+            'apis.usps.com/service-standards/v3/standards*' => Http::response([]),
+        ]);
+
+        $ss = new ServiceStandards('test-id', 'test-secret');
+        $ss->getStandards('20500-0005', '33101');
+
+        Http::assertSent(fn ($r) => str_contains($r->url(), 'originZIPCode=205000005'));
+    }
+
     public function test_international_service_standard(): void
     {
         Http::fake([
@@ -129,5 +154,28 @@ class ServiceStandardsTest extends TestCase
 
         $this->assertEquals('CA', $result['countryCode']);
         $this->assertArrayHasKey('serviceStandardMessage', $result);
+    }
+
+    public function test_international_service_standard_accepts_country_name(): void
+    {
+        Http::fake([
+            'apis.usps.com/international-service-standard/v3/international-service-standard*' => Http::response([
+                'countryCode' => 'CA',
+            ]),
+        ]);
+
+        $iss = new InternationalServiceStandards('test-id', 'test-secret');
+        $iss->getServiceStandard('Canada', 'PRIORITY_MAIL_INTERNATIONAL');
+
+        Http::assertSent(fn ($r) => str_contains($r->url(), 'countryCode=CA'));
+    }
+
+    public function test_international_service_standard_throws_for_invalid_country(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid country code: ZZ.');
+
+        $iss = new InternationalServiceStandards('test-id', 'test-secret');
+        $iss->getServiceStandard('ZZ', 'PRIORITY_MAIL_INTERNATIONAL');
     }
 }

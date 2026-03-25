@@ -33,8 +33,10 @@ class Tracking extends USPSBase
      */
     public function registerNotifications(string $trackingNumber, array $notificationRequest): array
     {
+        $encoded = rawurlencode($trackingNumber);
+
         return $this->apiPost(
-            "/tracking/v3r2/tracking/{$trackingNumber}/notifications",
+            "/tracking/v3r2/tracking/{$encoded}/notifications",
             $notificationRequest
         );
     }
@@ -48,8 +50,10 @@ class Tracking extends USPSBase
      */
     public function proofOfDelivery(string $trackingNumber, array $request): array
     {
+        $encoded = rawurlencode($trackingNumber);
+
         return $this->apiPost(
-            "/tracking/v3r2/tracking/{$trackingNumber}/proof-of-delivery",
+            "/tracking/v3r2/tracking/{$encoded}/proof-of-delivery",
             $request
         );
     }

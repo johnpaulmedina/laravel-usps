@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * USPS API v3 — Laravel Service Provider
  *
@@ -18,6 +20,12 @@ class UspsServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../../config/usps.php' => config_path('usps.php'),
         ], 'usps-config');
+
+        $this->publishes([
+            __DIR__ . '/../../routes/usps.php' => base_path('routes/usps.php'),
+        ], 'usps-routes');
+
+        $this->loadRoutes();
 
         if ($this->app->runningInConsole()) {
             $this->commands([
@@ -40,8 +48,24 @@ class UspsServiceProvider extends ServiceProvider
         });
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function provides(): array
     {
         return ['usps'];
+    }
+
+    protected function loadRoutes(): void
+    {
+        $publishedRoutes = base_path('routes/usps.php');
+
+        if (file_exists($publishedRoutes)) {
+            $this->loadRoutesFrom($publishedRoutes);
+
+            return;
+        }
+
+        $this->loadRoutesFrom(__DIR__ . '/../../routes/usps.php');
     }
 }

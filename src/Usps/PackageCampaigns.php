@@ -43,7 +43,8 @@ class PackageCampaigns extends USPSBase
      */
     public function getCampaign(string $campaignId): array
     {
-        return $this->apiGet("/informed-delivery-package-campaigns/v3/package-campaigns/{$campaignId}");
+        $encoded = rawurlencode($campaignId);
+        return $this->apiGet("/informed-delivery-package-campaigns/v3/package-campaigns/{$encoded}");
     }
 
     /**
@@ -55,7 +56,8 @@ class PackageCampaigns extends USPSBase
      */
     public function updateCampaign(string $campaignId, array $campaignData): array
     {
-        return $this->apiPut("/informed-delivery-package-campaigns/v3/package-campaigns/{$campaignId}", $campaignData);
+        $encoded = rawurlencode($campaignId);
+        return $this->apiPut("/informed-delivery-package-campaigns/v3/package-campaigns/{$encoded}", $campaignData);
     }
 
     /**
@@ -66,7 +68,8 @@ class PackageCampaigns extends USPSBase
      */
     public function cancelCampaign(string $campaignId): array
     {
-        return $this->apiDelete("/informed-delivery-package-campaigns/v3/package-campaigns/{$campaignId}");
+        $encoded = rawurlencode($campaignId);
+        return $this->apiDelete("/informed-delivery-package-campaigns/v3/package-campaigns/{$encoded}");
     }
 
     /**
@@ -78,6 +81,7 @@ class PackageCampaigns extends USPSBase
      */
     public function addTrackingNumbers(string $campaignId, array $trackingData): array
     {
-        return $this->apiPost("/informed-delivery-package-campaigns/v3/package-campaigns/{$campaignId}/tracking-numbers", $trackingData);
+        $encoded = rawurlencode($campaignId);
+        return $this->apiPost("/informed-delivery-package-campaigns/v3/package-campaigns/{$encoded}/tracking-numbers", $trackingData);
     }
 }

@@ -1,0 +1,106 @@
+name: Auto Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip release]') && !contains(github.event.head_commit.message, 'chore:')"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: tag
+        run: |
+          latest=$(git tag --sort=-v:refname | head -1)
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "Latest tag: $latest"
+
+      - name: Determine bump type
+        id: bump
+        run: |
+          latest="${{ steps.tag.outputs.latest }}"
+          message="${{ github.event.head_commit.message }}"
+
+          # Parse current version
+          version=$(echo "$latest" | sed 's/^v//')
+          major=$(echo "$version" | cut -d. -f1)
+          minor=$(echo "$version" | cut -d. -f2)
+          patch=$(echo "$version" | cut -d. -f3)
+
+          # Determine bump from commit message prefix
+          if echo "$message" | grep -qiE '^feat!:|^BREAKING'; then
+            minor=$((minor + 1))
+            patch=0
+            type="minor"
+          elif echo "$message" | grep -qiE '^feat'; then
+            minor=$((minor + 1))
+            patch=0
+            type="minor"
+          elif echo "$message" | grep -qiE '^fix|^perf|^refactor'; then
+            patch=$((patch + 1))
+            type="patch"
+          else
+            # Default to patch for any other change
+            patch=$((patch + 1))
+            type="patch"
+          fi
+
+          new_version="v${major}.${minor}.${patch}"
+          echo "new_version=$new_version" >> "$GITHUB_OUTPUT"
+          echo "type=$type" >> "$GITHUB_OUTPUT"
+          echo "Bump: $type -> $new_version"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          latest="${{ steps.tag.outputs.latest }}"
+
+          echo "changelog<<EOF" >> "$GITHUB_OUTPUT"
+          if [ -n "$latest" ]; then
+            git log "${latest}..HEAD" --pretty=format:"- %s (%h)" --no-merges >> "$GITHUB_OUTPUT"
+          else
+            git log --pretty=format:"- %s (%h)" --no-merges -20 >> "$GITHUB_OUTPUT"
+          fi
+          echo "" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Create tag and release
+        uses: actions/github-script@v7
+        env:
+          NEW_VERSION: ${{ steps.bump.outputs.new_version }}
+          CHANGELOG: ${{ steps.changelog.outputs.changelog }}
+          BUMP_TYPE: ${{ steps.bump.outputs.type }}
+        with:
+          script: |
+            const version = process.env.NEW_VERSION;
+            const changelog = process.env.CHANGELOG;
+            const type = process.env.BUMP_TYPE;
+
+            // Create tag
+            await github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/${version}`,
+              sha: context.sha,
+            });
+
+            // Create release
+            await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: version,
+              name: `${version}`,
+              body: `### Changes\n\n${changelog}`,
+              make_latest: 'true',
+            });
+
+            core.notice(`Released ${version} (${type} bump)`);

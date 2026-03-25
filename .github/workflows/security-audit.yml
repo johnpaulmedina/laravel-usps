@@ -1,0 +1,135 @@
+name: Security Audit
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  push:
+    branches: [main]
+    paths: ['composer.lock']
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Run security audit
+        id: audit
+        continue-on-error: true
+        run: |
+          composer audit --format=json 2>/dev/null > /tmp/audit.json || true
+          composer audit 2>&1 | tee /tmp/audit.txt
+
+          if grep -q '"advisories":\s*{}\s*$\|No security vulnerability' /tmp/audit.txt 2>/dev/null; then
+            echo "vulnerable=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "vulnerable=true" >> "$GITHUB_OUTPUT"
+            echo "report<<EOF" >> "$GITHUB_OUTPUT"
+            cat /tmp/audit.txt >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open or update issue
+        if: steps.audit.outputs.vulnerable == 'true'
+        uses: actions/github-script@v7
+        env:
+          REPORT: ${{ steps.audit.outputs.report }}
+        with:
+          script: |
+            const report = process.env.REPORT;
+            const title = 'Security: vulnerable dependencies detected';
+
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'security',
+            });
+
+            const existing = issues.find(i => i.title === title);
+
+            const body = [
+              '## Vulnerable Dependencies',
+              '',
+              '```',
+              report,
+              '```',
+              '',
+              '### Resolution',
+              '1. Run `composer audit` locally',
+              '2. Update affected packages: `composer update`',
+              '3. If no patch available, evaluate risk and document',
+              '',
+              `_Last checked: ${new Date().toISOString()}_`,
+            ].join('\n');
+
+            if (existing) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['security', 'automated', 'dependencies'],
+              });
+            }
+
+      - name: Notify Slack (vulnerability)
+        if: steps.audit.outputs.vulnerable == 'true'
+        uses: ./.github/actions/slack
+        with:
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          title: Security vulnerability detected
+          message: "Composer audit found vulnerable dependencies. Check the issue for details."
+          urgency: error
+          link: ${{ github.server_url }}/${{ github.repository }}/issues?q=label%3Asecurity+is%3Aopen
+
+      - name: Close resolved issues
+        if: steps.audit.outputs.vulnerable == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'security',
+            });
+
+            for (const issue of issues) {
+              if (issue.title === 'Security: vulnerable dependencies detected') {
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  state: 'closed',
+                  state_reason: 'completed',
+                });
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  body: '✅ All vulnerabilities resolved.',
+                });
+              }
+            }

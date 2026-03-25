@@ -74,4 +74,22 @@ class InternationalPricesTest extends TestCase
         $result = $this->api()->letterRateSearch(['weight' => 1.0]);
         $this->assertArrayHasKey('price', $result);
     }
+
+    public function test_base_rate_search_throws_for_negative_weight(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('weight must be greater than 0');
+
+        $this->api()->baseRateSearch(['destinationCountryCode' => 'CA', 'weight' => -1]);
+    }
+
+    public function test_base_rate_search_allows_missing_weight(): void
+    {
+        Http::fake([
+            'apis.usps.com/international-prices/v3/base-rates/search' => Http::response(['totalBasePrice' => 10.00]),
+        ]);
+
+        $result = $this->api()->baseRateSearch(['destinationCountryCode' => 'CA']);
+        $this->assertArrayHasKey('totalBasePrice', $result);
+    }
 }

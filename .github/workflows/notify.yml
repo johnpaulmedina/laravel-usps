@@ -1,0 +1,56 @@
+name: Slack Notify
+
+on:
+  workflow_call:
+    inputs:
+      title:
+        required: true
+        type: string
+      message:
+        required: true
+        type: string
+      urgency:
+        required: false
+        type: string
+        default: 'info'
+      link:
+        required: false
+        type: string
+    secrets:
+      SLACK_WEBHOOK_URL:
+        required: true
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack notification
+        run: |
+          EMOJI="ℹ️"
+          COLOR="#36a64f"
+          case "${{ inputs.urgency }}" in
+            error)   EMOJI="🚨"; COLOR="#dc3545" ;;
+            warning) EMOJI="⚠️"; COLOR="#ffc107" ;;
+            success) EMOJI="✅"; COLOR="#28a745" ;;
+          esac
+
+          LINK_BLOCK=""
+          if [ -n "${{ inputs.link }}" ]; then
+            LINK_BLOCK=",{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"<${{ inputs.link }}|View on GitHub>\"}}"
+          fi
+
+          curl -s -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+            -H 'Content-Type: application/json' \
+            -d "{
+              \"blocks\": [
+                {
+                  \"type\": \"header\",
+                  \"text\": {\"type\": \"plain_text\", \"text\": \"${EMOJI} ${{ inputs.title }}\"}
+                },
+                {
+                  \"type\": \"section\",
+                  \"text\": {\"type\": \"mrkdwn\", \"text\": \"${{ inputs.message }}\"}
+                }
+                ${LINK_BLOCK}
+              ]
+            }"

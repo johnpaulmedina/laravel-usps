@@ -10,15 +10,27 @@
 
 namespace Johnpaulmedina\Usps;
 
+use Johnpaulmedina\Usps\Validation\ValidatesZipCodes;
+
 class CityStateLookup extends USPSBase
 {
+    use ValidatesZipCodes;
+
     /**
      * Lookup city and state by ZIP code.
      */
     public function lookup(string $zipCode): array
     {
+        $normalized = $this->normalizeZip5($zipCode);
+
+        if ($normalized === null) {
+            $this->errorCode = 1;
+            $this->errorMessage = 'Invalid ZIP code format.';
+            return [];
+        }
+
         return $this->apiGet('/addresses/v3/city-state', [
-            'ZIPCode' => $zipCode,
+            'ZIPCode' => $normalized,
         ]);
     }
 

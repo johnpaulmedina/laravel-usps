@@ -57,7 +57,8 @@ class Labels extends USPSBase
      */
     public function cancelLabel(string $trackingNumber): array
     {
-        return $this->apiDelete("/labels/v3/label/{$trackingNumber}");
+        $encoded = rawurlencode($trackingNumber);
+        return $this->apiDelete("/labels/v3/label/{$encoded}");
     }
 
     /**
@@ -69,7 +70,8 @@ class Labels extends USPSBase
      */
     public function editLabel(string $trackingNumber, array $patchData): array
     {
-        return $this->apiPatch("/labels/v3/label/{$trackingNumber}", $patchData);
+        $encoded = rawurlencode($trackingNumber);
+        return $this->apiPatch("/labels/v3/label/{$encoded}", $patchData);
     }
 
     /**
@@ -108,7 +110,8 @@ class Labels extends USPSBase
      */
     public function cancelImb(string $imb): array
     {
-        return $this->apiDelete("/labels/v3/indicia/imb/{$imb}");
+        $encoded = rawurlencode($imb);
+        return $this->apiDelete("/labels/v3/indicia/imb/{$encoded}");
     }
 
     /**
@@ -149,7 +152,8 @@ class Labels extends USPSBase
      */
     public function getBranding(string $imageUUID): array
     {
-        return $this->apiGet("/labels/v3/branding/{$imageUUID}");
+        $encoded = rawurlencode($imageUUID);
+        return $this->apiGet("/labels/v3/branding/{$encoded}");
     }
 
     /**
@@ -160,7 +164,8 @@ class Labels extends USPSBase
      */
     public function deleteBranding(string $imageUUID): array
     {
-        return $this->apiDelete("/labels/v3/branding/{$imageUUID}");
+        $encoded = rawurlencode($imageUUID);
+        return $this->apiDelete("/labels/v3/branding/{$encoded}");
     }
 
     /**
@@ -172,7 +177,8 @@ class Labels extends USPSBase
      */
     public function renameBranding(string $imageUUID, array $patchData): array
     {
-        return $this->apiPatch("/labels/v3/branding/{$imageUUID}", $patchData);
+        $encoded = rawurlencode($imageUUID);
+        return $this->apiPatch("/labels/v3/branding/{$encoded}", $patchData);
     }
 
     /**
@@ -185,7 +191,8 @@ class Labels extends USPSBase
      */
     public function reprintLabel(string $trackingNumber, array $reprintData, string $paymentToken): array
     {
-        return $this->apiPost("/labels/v3/label-reprint/{$trackingNumber}", $reprintData, [
+        $encoded = rawurlencode($trackingNumber);
+        return $this->apiPost("/labels/v3/label-reprint/{$encoded}", $reprintData, [
             'X-Payment-Authorization-Token' => $paymentToken,
         ]);
     }

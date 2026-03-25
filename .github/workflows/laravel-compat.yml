@@ -1,0 +1,343 @@
+name: Laravel Compatibility
+
+on:
+  schedule:
+    # Check for Laravel releases every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  check-laravel:
+    runs-on: ubuntu-latest
+    outputs:
+      current_constraint: ${{ steps.current.outputs.constraint }}
+      latest_version: ${{ steps.latest.outputs.version }}
+      latest_major: ${{ steps.latest.outputs.major }}
+      latest_minor: ${{ steps.latest.outputs.minor }}
+      needs_update: ${{ steps.compare.outputs.needs_update }}
+      new_constraint: ${{ steps.compare.outputs.new_constraint }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get current constraint
+        id: current
+        run: |
+          constraint=$(jq -r '.require["illuminate/support"]' composer.json)
+          echo "constraint=$constraint" >> "$GITHUB_OUTPUT"
+          echo "Current constraint: $constraint"
+
+      - name: Get latest Laravel version
+        id: latest
+        run: |
+          version=$(curl -s https://api.github.com/repos/laravel/framework/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+          major=$(echo "$version" | cut -d. -f1)
+          minor=$(echo "$version" | cut -d. -f2)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "major=$major" >> "$GITHUB_OUTPUT"
+          echo "minor=$minor" >> "$GITHUB_OUTPUT"
+          echo "Latest Laravel: $version (major: $major)"
+
+      - name: Compare versions
+        id: compare
+        run: |
+          constraint="${{ steps.current.outputs.constraint }}"
+          major="${{ steps.latest.outputs.major }}"
+
+          # Check if our constraint already covers this major version
+          if echo "$constraint" | grep -q "\^${major}\.0"; then
+            echo "needs_update=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Already supports Laravel $major"
+          else
+            new_constraint=$(echo "$constraint" | sed "s/\(.*\)/\1 || ^${major}.0/")
+            echo "needs_update=true" >> "$GITHUB_OUTPUT"
+            echo "new_constraint=$new_constraint" >> "$GITHUB_OUTPUT"
+            echo "::notice::Need to add Laravel $major support"
+          fi
+
+  update-and-test:
+    needs: check-laravel
+    if: needs.check-laravel.outputs.needs_update == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3', '8.4']
+        laravel: ['latest']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: Update composer.json
+        run: |
+          major="${{ needs.check-laravel.outputs.latest_major }}"
+
+          # Update illuminate/* constraints
+          for pkg in support http cache; do
+            jq --arg pkg "illuminate/$pkg" --arg ver "$(jq -r ".require[\"illuminate/$pkg\"]" composer.json) || ^${major}.0" \
+              '.require[$pkg] = $ver' composer.json > tmp.json && mv tmp.json composer.json
+          done
+
+          # Update PHP constraint if needed
+          echo "Updated composer.json:"
+          jq '.require' composer.json
+
+      - name: Install dependencies
+        id: install
+        continue-on-error: true
+        run: |
+          composer update --no-interaction --prefer-dist 2>&1 | tee /tmp/composer-output.txt
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Run tests
+        id: tests
+        if: steps.install.outcome == 'success'
+        continue-on-error: true
+        run: |
+          vendor/bin/phpunit 2>&1 | tee /tmp/test-output.txt
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Save results
+        run: |
+          mkdir -p /tmp/results
+          echo "${{ matrix.php }}" > /tmp/results/php-version
+          echo "${{ steps.install.outcome }}" > /tmp/results/install-result
+          echo "${{ steps.tests.outcome }}" > /tmp/results/test-result
+          [ -f /tmp/composer-output.txt ] && cp /tmp/composer-output.txt /tmp/results/ || true
+          [ -f /tmp/test-output.txt ] && cp /tmp/test-output.txt /tmp/results/ || true
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-php${{ matrix.php }}
+          path: /tmp/results/
+
+  create-pr-or-issue:
+    needs: [check-laravel, update-and-test]
+    if: always() && needs.check-laravel.outputs.needs_update == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all results
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/all-results
+
+      - name: Analyze results
+        id: analyze
+        run: |
+          ALL_PASS=true
+          FAILURES=""
+          SUCCESSES=""
+
+          for dir in /tmp/all-results/results-php*/; do
+            [ -d "$dir" ] || continue
+            php_ver=$(cat "$dir/php-version" 2>/dev/null || echo "unknown")
+            install=$(cat "$dir/install-result" 2>/dev/null || echo "unknown")
+            tests=$(cat "$dir/test-result" 2>/dev/null || echo "unknown")
+
+            if [ "$install" = "success" ] && [ "$tests" = "success" ]; then
+              SUCCESSES="${SUCCESSES}- PHP ${php_ver}: ✅ Install OK, Tests OK\n"
+            else
+              ALL_PASS=false
+              install_log=""
+              test_log=""
+              [ -f "$dir/composer-output.txt" ] && install_log=$(tail -20 "$dir/composer-output.txt")
+              [ -f "$dir/test-output.txt" ] && test_log=$(tail -30 "$dir/test-output.txt")
+
+              FAILURES="${FAILURES}\n### PHP ${php_ver}\n"
+              [ "$install" != "success" ] && FAILURES="${FAILURES}- ❌ Composer install failed\n\`\`\`\n${install_log}\n\`\`\`\n"
+              [ "$tests" != "success" ] && [ "$install" = "success" ] && FAILURES="${FAILURES}- ❌ Tests failed\n\`\`\`\n${test_log}\n\`\`\`\n"
+            fi
+          done
+
+          echo "all_pass=$ALL_PASS" >> "$GITHUB_OUTPUT"
+
+          echo "report<<EOF" >> "$GITHUB_OUTPUT"
+          echo -e "### Results\n${SUCCESSES}\n${FAILURES}" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Setup PHP
+        if: steps.analyze.outputs.all_pass == 'true'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Create upgrade PR
+        if: steps.analyze.outputs.all_pass == 'true'
+        run: |
+          major="${{ needs.check-laravel.outputs.latest_major }}"
+          version="${{ needs.check-laravel.outputs.latest_version }}"
+          BRANCH="laravel-compat/v${major}"
+
+          git checkout -b "$BRANCH"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Update illuminate/* constraints
+          for pkg in support http cache; do
+            current=$(jq -r ".require[\"illuminate/$pkg\"]" composer.json)
+            if ! echo "$current" | grep -q "\^${major}\.0"; then
+              jq --arg pkg "illuminate/$pkg" --arg ver "${current} || ^${major}.0" \
+                '.require[$pkg] = $ver' composer.json > tmp.json && mv tmp.json composer.json
+            fi
+          done
+
+          # Update keywords
+          jq '.keywords += ["laravel'$major'"]' composer.json > tmp.json && mv tmp.json composer.json
+
+          composer update --no-interaction --prefer-dist 2>/dev/null || true
+
+          git add composer.json composer.lock
+          git commit -m "feat: add Laravel ${major} support (${version})"
+          git push origin "$BRANCH"
+
+          echo "BRANCH=$BRANCH" >> "$GITHUB_ENV"
+          echo "MAJOR=$major" >> "$GITHUB_ENV"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Open PR
+        if: steps.analyze.outputs.all_pass == 'true'
+        uses: actions/github-script@v7
+        env:
+          REPORT: ${{ steps.analyze.outputs.report }}
+        with:
+          script: |
+            const major = process.env.MAJOR;
+            const version = process.env.VERSION;
+            const report = process.env.REPORT;
+
+            const body = [
+              `## Add Laravel ${major} Support`,
+              '',
+              `Laravel \`v${version}\` has been released. This PR updates composer constraints to support it.`,
+              '',
+              '### Changes',
+              `- \`illuminate/support\`: added \`^${major}.0\``,
+              `- \`illuminate/http\`: added \`^${major}.0\``,
+              `- \`illuminate/cache\`: added \`^${major}.0\``,
+              '',
+              report,
+              '',
+              '_This PR was created automatically by the Laravel compatibility workflow._',
+            ].join('\n');
+
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `feat: add Laravel ${major} support (v${version})`,
+              body: body,
+              head: process.env.BRANCH,
+              base: 'main',
+            });
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              labels: ['laravel-compat', 'automated', 'dependencies'],
+            });
+
+            core.notice(`PR created: ${pr.html_url}`);
+            core.exportVariable('PR_URL', pr.html_url);
+
+      - name: Notify Slack (PR)
+        if: steps.analyze.outputs.all_pass == 'true' && env.PR_URL
+        uses: ./.github/actions/slack
+        with:
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          title: "Laravel ${{ needs.check-laravel.outputs.latest_major }} support ready"
+          message: "Tests passed on all PHP versions. PR created to add support."
+          urgency: success
+          link: ${{ env.PR_URL }}
+
+      - name: Open failure issue
+        if: steps.analyze.outputs.all_pass == 'false'
+        uses: actions/github-script@v7
+        env:
+          REPORT: ${{ steps.analyze.outputs.report }}
+        with:
+          script: |
+            const major = process.env.MAJOR || '${{ needs.check-laravel.outputs.latest_major }}';
+            const version = '${{ needs.check-laravel.outputs.latest_version }}';
+            const report = process.env.REPORT;
+
+            // Check if issue already exists
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'laravel-compat,failed',
+            });
+
+            const existing = issues.find(i => i.title.includes(`Laravel ${major}`));
+            if (existing) {
+              // Update existing issue
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body: `### Update (${new Date().toISOString().split('T')[0]})\n\nLatest Laravel: \`v${version}\`\n\n${report}`,
+              });
+              core.notice(`Updated existing issue: ${existing.html_url}`);
+              return;
+            }
+
+            const body = [
+              `## Laravel ${major} Compatibility Failure`,
+              '',
+              `Laravel \`v${version}\` has been released but this package **cannot be updated automatically** due to test or dependency failures.`,
+              '',
+              report,
+              '',
+              '### Steps to resolve',
+              '',
+              '1. Check the failing test output above',
+              '2. Review [Laravel upgrade guide](https://laravel.com/docs/upgrade)',
+              '3. Update the package code to be compatible',
+              '4. Run `composer update` and `vendor/bin/phpunit`',
+              '5. Update `composer.json` constraints manually',
+              '',
+              '### References',
+              `- [Laravel ${major} Release](https://github.com/laravel/framework/releases/tag/v${version})`,
+              '- [USPS API Examples](https://github.com/USPS/api-examples)',
+              '',
+              '_This issue was created automatically by the Laravel compatibility workflow._',
+            ].join('\n');
+
+            const { data: issue } = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Laravel ${major} compatibility: tests/dependencies failing`,
+              body: body,
+              labels: ['laravel-compat', 'failed', 'automated', 'bug'],
+            });
+
+            core.notice(`Issue created: ${issue.html_url}`);
+            core.exportVariable('ISSUE_URL', issue.html_url);
+
+      - name: Notify Slack (failure)
+        if: steps.analyze.outputs.all_pass == 'false' && env.ISSUE_URL
+        uses: ./.github/actions/slack
+        with:
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          title: "Laravel ${{ needs.check-laravel.outputs.latest_major }} compat failing"
+          message: "Tests or dependencies failed. Manual intervention needed."
+          urgency: error
+          link: ${{ env.ISSUE_URL }}

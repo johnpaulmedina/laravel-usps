@@ -1,0 +1,23 @@
+name: Feature Request
+description: Suggest a new feature or API endpoint
+labels: [enhancement]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What would you like added?
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Why do you need this?
+
+  - type: input
+    id: usps-endpoint
+    attributes:
+      label: USPS API Endpoint (if applicable)
+      placeholder: "POST /labels/v3/label"

@@ -1,0 +1,73 @@
+name: Bug Report
+description: Report a bug with the Laravel USPS package
+labels: [bug]
+body:
+  - type: input
+    id: php-version
+    attributes:
+      label: PHP Version
+      placeholder: "8.4"
+    validations:
+      required: true
+
+  - type: input
+    id: laravel-version
+    attributes:
+      label: Laravel Version
+      placeholder: "13.2"
+    validations:
+      required: true
+
+  - type: input
+    id: package-version
+    attributes:
+      label: Package Version
+      placeholder: "v13.2.3"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: api-domain
+    attributes:
+      label: API Domain
+      options:
+        - Addresses
+        - Tracking
+        - Domestic Labels
+        - International Labels
+        - Domestic Prices
+        - International Prices
+        - Service Standards
+        - Locations
+        - Carrier Pickup
+        - Containers
+        - Payments
+        - Campaigns
+        - Shipping Options
+        - SCAN Forms
+        - Other
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Code or steps to reproduce the issue
+      render: php
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior

@@ -1,0 +1,46 @@
+name: Static Analysis
+
+on:
+  push:
+    branches: [main]
+    paths: ['src/**', 'tests/**']
+  pull_request:
+    branches: [main]
+    paths: ['src/**', 'tests/**']
+
+jobs:
+  phpstan:
+    runs-on: ubuntu-latest
+    name: PHPStan
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Install PHPStan
+        run: composer require --dev phpstan/phpstan larastan/larastan --no-interaction
+
+      - name: Create PHPStan config
+        run: |
+          cat > phpstan.neon << 'NEON'
+          includes:
+              - vendor/larastan/larastan/extension.neon
+          parameters:
+              paths:
+                  - src
+              level: 6
+              ignoreErrors:
+                  - '#Call to an undefined method Illuminate\\Http\\Client\\Response::#'
+          NEON
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --no-progress

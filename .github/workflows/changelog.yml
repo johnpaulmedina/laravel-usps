@@ -1,0 +1,50 @@
+name: Generate Changelog
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate CHANGELOG.md
+        run: |
+          echo "# Changelog" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+
+          # Get all tags sorted by version
+          tags=$(git tag --sort=-v:refname)
+          prev=""
+
+          for tag in $tags; do
+            date=$(git log -1 --format=%ci "$tag" | cut -d' ' -f1)
+            echo "## [$tag] — $date" >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
+
+            if [ -n "$prev" ]; then
+              git log "${tag}..${prev}" --pretty=format:"- %s (%h)" --no-merges >> CHANGELOG.md
+            else
+              git log "$tag" --pretty=format:"- %s (%h)" --no-merges -20 >> CHANGELOG.md
+            fi
+
+            echo "" >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            prev=$tag
+          done
+
+      - name: Commit changelog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git diff --cached --quiet || git commit -m "docs: update CHANGELOG.md [skip release]"
+          git push origin HEAD:main

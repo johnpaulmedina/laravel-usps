@@ -1,0 +1,221 @@
+name: Sync USPS API Changes
+
+on:
+  schedule:
+    # Check for USPS API changes daily at 6 AM UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-and-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Clone USPS API Examples
+        run: git clone --depth 1 https://github.com/USPS/api-examples.git /tmp/usps-api-examples
+
+      - name: Check for changes
+        id: diff
+        run: |
+          mkdir -p .github/upstream-hashes
+          CHANGES=""
+
+          # Hash every file in the USPS repo (excluding .git)
+          for file in /tmp/usps-api-examples/*; do
+            [ -f "$file" ] || continue
+            file_name=$(basename "$file")
+            upstream_hash=$(sha256sum "$file" | cut -d' ' -f1)
+            cache_file=".github/upstream-hashes/${file_name}.sha256"
+
+            if [ -f "$cache_file" ]; then
+              cached_hash=$(cat "$cache_file")
+              if [ "$upstream_hash" != "$cached_hash" ]; then
+                CHANGES="${CHANGES}- \`${file_name}\` (modified)\n"
+              fi
+            else
+              CHANGES="${CHANGES}- \`${file_name}\` (new)\n"
+            fi
+          done
+
+          # Check Error Inventory subdirectory
+          if [ -d "/tmp/usps-api-examples/Error Inventory" ]; then
+            for file in "/tmp/usps-api-examples/Error Inventory"/*; do
+              [ -f "$file" ] || continue
+              file_name=$(basename "$file")
+              upstream_hash=$(sha256sum "$file" | cut -d' ' -f1)
+              cache_file=".github/upstream-hashes/errors-${file_name}.sha256"
+
+              if [ -f "$cache_file" ]; then
+                cached_hash=$(cat "$cache_file")
+                if [ "$upstream_hash" != "$cached_hash" ]; then
+                  CHANGES="${CHANGES}- \`Error Inventory/${file_name}\` (modified)\n"
+                fi
+              else
+                CHANGES="${CHANGES}- \`Error Inventory/${file_name}\` (new)\n"
+              fi
+            done
+          fi
+
+          if [ -n "$CHANGES" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "changes<<EOF" >> "$GITHUB_OUTPUT"
+            echo -e "$CHANGES" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No USPS API changes detected"
+          fi
+
+      - name: Update hashes
+        if: steps.diff.outputs.has_changes == 'true'
+        run: |
+          mkdir -p .github/upstream-hashes
+
+          for file in /tmp/usps-api-examples/*; do
+            [ -f "$file" ] || continue
+            file_name=$(basename "$file")
+            sha256sum "$file" | cut -d' ' -f1 > ".github/upstream-hashes/${file_name}.sha256"
+          done
+
+          if [ -d "/tmp/usps-api-examples/Error Inventory" ]; then
+            for file in "/tmp/usps-api-examples/Error Inventory"/*; do
+              [ -f "$file" ] || continue
+              file_name=$(basename "$file")
+              sha256sum "$file" | cut -d' ' -f1 > ".github/upstream-hashes/errors-${file_name}.sha256"
+            done
+          fi
+
+      - name: Copy upstream specs for Copilot context
+        if: steps.diff.outputs.has_changes == 'true'
+        run: |
+          mkdir -p .github/upstream-specs
+          cp /tmp/usps-api-examples/*.json .github/upstream-specs/ 2>/dev/null || true
+          cp /tmp/usps-api-examples/*.pdf .github/upstream-specs/ 2>/dev/null || true
+          cp /tmp/usps-api-examples/*.yaml .github/upstream-specs/ 2>/dev/null || true
+
+      - name: Create PR branch
+        if: steps.diff.outputs.has_changes == 'true'
+        run: |
+          BRANCH="usps-api-sync/$(date +%Y-%m-%d)"
+          git checkout -b "$BRANCH"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/upstream-hashes/ .github/upstream-specs/
+          git commit -m "chore: USPS API upstream changes detected $(date +%Y-%m-%d)"
+          git push origin "$BRANCH"
+          echo "BRANCH=$BRANCH" >> "$GITHUB_ENV"
+
+      - name: Create Pull Request
+        if: steps.diff.outputs.has_changes == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const changes = `${{ steps.diff.outputs.changes }}`;
+            const body = [
+              '## USPS API Upstream Changes Detected',
+              '',
+              'The following files have changed in [USPS/api-examples](https://github.com/USPS/api-examples):',
+              '',
+              changes,
+              '',
+              '### What to do',
+              '',
+              '1. Review the changed specs in `.github/upstream-specs/`',
+              '2. Update the corresponding API classes in `src/Usps/`',
+              '3. Update Form Requests if validation rules changed',
+              '4. Update tests to match new request/response formats',
+              '5. Update README.md and `docs/index.html`',
+              '6. Run `vendor/bin/phpunit` to verify',
+              '',
+              '### Copilot prompt',
+              '',
+              '```',
+              'Review the changed USPS API specs in .github/upstream-specs/ and update',
+              'the corresponding classes in src/Usps/, controllers in src/Usps/Http/Controllers/,',
+              'form requests in src/Usps/Http/Requests/, tests, README.md, and docs/index.html',
+              'to match the new API spec. Follow existing patterns — strict types, PSR-4,',
+              'Orchestra Testbench tests with Http::fake().',
+              '```',
+              '',
+              '_This PR was created automatically by the USPS API sync workflow._',
+            ].join('\n');
+
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `chore: USPS API upstream changes (${new Date().toISOString().split('T')[0]})`,
+              body: body,
+              head: process.env.BRANCH,
+              base: 'main',
+              draft: false,
+            });
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              labels: ['usps-api-sync', 'automated'],
+            });
+
+            core.notice(`PR created: ${pr.html_url}`);
+            core.exportVariable('PR_URL', pr.html_url);
+
+      - name: Notify Slack
+        if: steps.diff.outputs.has_changes == 'true' && env.PR_URL
+        uses: ./.github/actions/slack
+        with:
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          title: USPS API specs changed upstream
+          message: "A PR has been created with the updated specs. Review and update the package code."
+          urgency: warning
+          link: ${{ env.PR_URL }}
+
+  seed-hashes:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check if hashes exist
+        id: check
+        run: |
+          if [ -d ".github/upstream-hashes" ] && [ "$(ls -A .github/upstream-hashes 2>/dev/null)" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Seed initial hashes
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          git clone --depth 1 https://github.com/USPS/api-examples.git /tmp/usps-api-examples
+          mkdir -p .github/upstream-hashes
+
+          for file in /tmp/usps-api-examples/*; do
+            [ -f "$file" ] || continue
+            file_name=$(basename "$file")
+            sha256sum "$file" | cut -d' ' -f1 > ".github/upstream-hashes/${file_name}.sha256"
+          done
+
+          if [ -d "/tmp/usps-api-examples/Error Inventory" ]; then
+            for file in "/tmp/usps-api-examples/Error Inventory"/*; do
+              [ -f "$file" ] || continue
+              file_name=$(basename "$file")
+              sha256sum "$file" | cut -d' ' -f1 > ".github/upstream-hashes/errors-${file_name}.sha256"
+            done
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/upstream-hashes/
+          git commit -m "chore: seed USPS API upstream hashes"
+          git push

@@ -1,0 +1,53 @@
+name: Slack Notification
+description: Send a notification to Slack
+
+inputs:
+  webhook_url:
+    description: Slack webhook URL
+    required: true
+  title:
+    description: Notification title
+    required: true
+  message:
+    description: Notification body (supports mrkdwn)
+    required: true
+  urgency:
+    description: 'info | warning | error | success'
+    default: 'info'
+  link:
+    description: Optional URL to include
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Send notification
+      shell: bash
+      run: |
+        EMOJI="ℹ️"
+        case "${{ inputs.urgency }}" in
+          error)   EMOJI="🚨" ;;
+          warning) EMOJI="⚠️" ;;
+          success) EMOJI="✅" ;;
+        esac
+
+        LINK_BLOCK=""
+        if [ -n "${{ inputs.link }}" ]; then
+          LINK_BLOCK=",{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"<${{ inputs.link }}|View on GitHub>\"}}"
+        fi
+
+        curl -s -X POST "${{ inputs.webhook_url }}" \
+          -H 'Content-Type: application/json' \
+          -d "{
+            \"blocks\": [
+              {
+                \"type\": \"header\",
+                \"text\": {\"type\": \"plain_text\", \"text\": \"${EMOJI} laravel-usps: ${{ inputs.title }}\"}
+              },
+              {
+                \"type\": \"section\",
+                \"text\": {\"type\": \"mrkdwn\", \"text\": \"${{ inputs.message }}\"}
+              }
+              ${LINK_BLOCK}
+            ]
+          }"

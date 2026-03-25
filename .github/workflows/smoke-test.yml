@@ -1,0 +1,212 @@
+name: USPS API Smoke Test
+
+on:
+  schedule:
+    # Run every Monday at 7 AM UTC
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    if: ${{ vars.USPS_CLIENT_ID != '' }}
+    env:
+      USPS_CLIENT_ID: ${{ vars.USPS_CLIENT_ID }}
+      USPS_CLIENT_SECRET: ${{ secrets.USPS_CLIENT_SECRET }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Test OAuth token
+        id: oauth
+        continue-on-error: true
+        run: |
+          php -r "
+          require 'vendor/autoload.php';
+          \$app = require_once 'vendor/laravel/laravel/bootstrap/app.php' ?? null;
+          use Illuminate\Support\Facades\Http;
+
+          \$response = Http::asForm()->post('https://apis.usps.com/oauth2/v3/token', [
+              'grant_type' => 'client_credentials',
+              'client_id' => getenv('USPS_CLIENT_ID'),
+              'client_secret' => getenv('USPS_CLIENT_SECRET'),
+              'scope' => 'addresses',
+          ]);
+
+          if (\$response->successful()) {
+              echo 'OAuth: OK' . PHP_EOL;
+              file_put_contents('/tmp/token', \$response->json('access_token'));
+              exit(0);
+          }
+          echo 'OAuth: FAILED - ' . \$response->status() . PHP_EOL;
+          exit(1);
+          "
+
+      - name: Test address validation
+        id: address
+        if: steps.oauth.outcome == 'success'
+        continue-on-error: true
+        run: |
+          TOKEN=$(cat /tmp/token)
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/json" \
+            "https://apis.usps.com/addresses/v3/address?streetAddress=1600+Pennsylvania+Ave+NW&state=DC&ZIPCode=20500")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "Address validation: OK"
+            echo "result=pass" >> "$GITHUB_OUTPUT"
+          else
+            echo "Address validation: FAILED ($HTTP_CODE)"
+            echo "$BODY"
+            echo "result=fail" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Test city/state lookup
+        id: citystate
+        if: steps.oauth.outcome == 'success'
+        continue-on-error: true
+        run: |
+          TOKEN=$(cat /tmp/token)
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/json" \
+            "https://apis.usps.com/addresses/v3/city-state?ZIPCode=33101")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "City/State lookup: OK"
+            echo "result=pass" >> "$GITHUB_OUTPUT"
+          else
+            echo "City/State lookup: FAILED ($HTTP_CODE)"
+            echo "result=fail" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Report results
+        id: report
+        run: |
+          oauth="${{ steps.oauth.outcome }}"
+          address="${{ steps.address.outputs.result }}"
+          citystate="${{ steps.citystate.outputs.result }}"
+
+          REPORT="| Test | Result |\n|------|--------|\n"
+          REPORT="${REPORT}| OAuth Token | $([ '$oauth' = 'success' ] && echo '✅' || echo '❌') |\n"
+          REPORT="${REPORT}| Address Validation | $([ '$address' = 'pass' ] && echo '✅' || echo '❌') |\n"
+          REPORT="${REPORT}| City/State Lookup | $([ '$citystate' = 'pass' ] && echo '✅' || echo '❌') |\n"
+
+          ALL_PASS=true
+          [ "$oauth" != "success" ] && ALL_PASS=false
+          [ "$address" = "fail" ] && ALL_PASS=false
+          [ "$citystate" = "fail" ] && ALL_PASS=false
+
+          echo "all_pass=$ALL_PASS" >> "$GITHUB_OUTPUT"
+          echo "report<<EOF" >> "$GITHUB_OUTPUT"
+          echo -e "$REPORT" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Open issue on failure
+        if: steps.report.outputs.all_pass == 'false'
+        uses: actions/github-script@v7
+        env:
+          REPORT: ${{ steps.report.outputs.report }}
+        with:
+          script: |
+            const report = process.env.REPORT;
+            const title = 'USPS API smoke test failing';
+            const date = new Date().toISOString().split('T')[0];
+
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'smoke-test',
+            });
+
+            const existing = issues.find(i => i.title === title);
+
+            const body = [
+              '## USPS API Smoke Test Failure',
+              '',
+              report,
+              '',
+              'The USPS API may be experiencing issues or our credentials/endpoints need updating.',
+              '',
+              '### Steps',
+              '1. Check [USPS API status](https://developer.usps.com)',
+              '2. Verify credentials are still valid',
+              '3. Check if endpoint URLs have changed',
+              '',
+              `_Last run: ${date}_`,
+            ].join('\n');
+
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body: `### ${date}\n\n${report}`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['smoke-test', 'automated', 'bug'],
+              });
+            }
+
+      - name: Notify Slack (API down)
+        if: steps.report.outputs.all_pass == 'false'
+        uses: ./.github/actions/slack
+        with:
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          title: USPS API smoke test failing
+          message: "Live USPS API endpoints are not responding correctly. Check credentials and API status."
+          urgency: error
+          link: ${{ github.server_url }}/${{ github.repository }}/issues?q=label%3Asmoke-test+is%3Aopen
+
+      - name: Close resolved smoke test issues
+        if: steps.report.outputs.all_pass == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'smoke-test',
+            });
+
+            for (const issue of issues) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed',
+                state_reason: 'completed',
+              });
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: '✅ Smoke tests passing again.',
+              });
+            }

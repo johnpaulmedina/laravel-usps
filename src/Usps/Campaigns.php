@@ -43,7 +43,8 @@ class Campaigns extends USPSBase
      */
     public function getCampaign(string $campaignId): array
     {
-        return $this->apiGet("/informed-delivery-campaigns/v3/campaigns/{$campaignId}");
+        $encoded = rawurlencode($campaignId);
+        return $this->apiGet("/informed-delivery-campaigns/v3/campaigns/{$encoded}");
     }
 
     /**
@@ -54,7 +55,8 @@ class Campaigns extends USPSBase
      */
     public function cancelCampaign(string $campaignId): array
     {
-        return $this->apiDelete("/informed-delivery-campaigns/v3/campaigns/{$campaignId}");
+        $encoded = rawurlencode($campaignId);
+        return $this->apiDelete("/informed-delivery-campaigns/v3/campaigns/{$encoded}");
     }
 
     /**
@@ -66,7 +68,8 @@ class Campaigns extends USPSBase
      */
     public function updateCampaign(string $campaignId, array $campaignData): array
     {
-        return $this->apiPut("/informed-delivery-campaigns/v3/campaigns/{$campaignId}", $campaignData);
+        $encoded = rawurlencode($campaignId);
+        return $this->apiPut("/informed-delivery-campaigns/v3/campaigns/{$encoded}", $campaignData);
     }
 
     /**
@@ -78,7 +81,8 @@ class Campaigns extends USPSBase
      */
     public function addImbs(string $campaignId, array $imbData): array
     {
-        return $this->apiPost("/informed-delivery-campaigns/v3/campaigns/{$campaignId}/imbs", $imbData);
+        $encoded = rawurlencode($campaignId);
+        return $this->apiPost("/informed-delivery-campaigns/v3/campaigns/{$encoded}/imbs", $imbData);
     }
 
     /**
@@ -90,7 +94,8 @@ class Campaigns extends USPSBase
      */
     public function getCallbackKeys(string $crid, array $options = []): array
     {
-        return $this->apiGet("/informed-delivery-campaigns/v3/campaigns/{$crid}/callbacks", $options);
+        $encoded = rawurlencode($crid);
+        return $this->apiGet("/informed-delivery-campaigns/v3/campaigns/{$encoded}/callbacks", $options);
     }
 
     /**
@@ -102,7 +107,9 @@ class Campaigns extends USPSBase
      */
     public function getCallbackSummary(string $crid, string $callbackKey): array
     {
-        return $this->apiGet("/informed-delivery-campaigns/v3/campaigns/{$crid}/{$callbackKey}/summary");
+        $encodedCrid = rawurlencode($crid);
+        $encodedKey = rawurlencode($callbackKey);
+        return $this->apiGet("/informed-delivery-campaigns/v3/campaigns/{$encodedCrid}/{$encodedKey}/summary");
     }
 
     /**
@@ -114,6 +121,8 @@ class Campaigns extends USPSBase
      */
     public function getCallbackDetails(string $crid, string $callbackKey): array
     {
-        return $this->apiGet("/informed-delivery-campaigns/v3/campaigns/{$crid}/{$callbackKey}/details");
+        $encodedCrid = rawurlencode($crid);
+        $encodedKey = rawurlencode($callbackKey);
+        return $this->apiGet("/informed-delivery-campaigns/v3/campaigns/{$encodedCrid}/{$encodedKey}/details");
     }
 }
