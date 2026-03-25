@@ -21,6 +21,8 @@ use Johnpaulmedina\Usps\PackageCampaigns;
 use Johnpaulmedina\Usps\Adjustments;
 use Johnpaulmedina\Usps\Disputes;
 use Johnpaulmedina\Usps\Appointments;
+use Johnpaulmedina\Usps\ShippingOptions;
+use Johnpaulmedina\Usps\ScanForm;
 use Orchestra\Testbench\TestCase;
 
 class FacadeTest extends TestCase
@@ -57,5 +59,7 @@ class FacadeTest extends TestCase
         $this->assertInstanceOf(Adjustments::class, $usps->adjustments());
         $this->assertInstanceOf(Disputes::class, $usps->disputes());
         $this->assertInstanceOf(Appointments::class, $usps->appointments());
+        $this->assertInstanceOf(ShippingOptions::class, $usps->shippingOptions());
+        $this->assertInstanceOf(ScanForm::class, $usps->scanForms());
     }
 }

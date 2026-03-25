@@ -275,4 +275,22 @@ class Usps
     {
         return new Appointments($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
     }
+
+    // -------------------------------------------------------------------------
+    // Shipping Options
+    // -------------------------------------------------------------------------
+
+    public function shippingOptions(): ShippingOptions
+    {
+        return new ShippingOptions($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+    }
+
+    // -------------------------------------------------------------------------
+    // SCAN Forms
+    // -------------------------------------------------------------------------
+
+    public function scanForms(): ScanForm
+    {
+        return new ScanForm($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+    }
 }

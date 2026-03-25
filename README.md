@@ -1,8 +1,10 @@
 # Laravel-USPS
 
-Full Laravel package for the **USPS API v3** (OAuth2). Covers all 18 USPS API domains: addresses, tracking, labels, international labels, domestic prices, international prices, service standards, locations, carrier pickup, containers, payments, campaigns, package campaigns, adjustments, disputes, and appointments.
+Full Laravel package for the **USPS API v3** (OAuth2). Covers all 20 USPS API domains: addresses, tracking, labels, international labels, domestic prices, international prices, service standards, locations, carrier pickup, containers, payments, campaigns, package campaigns, adjustments, disputes, appointments, shipping options, and SCAN forms.
 
 > **Note:** The legacy USPS Web Tools XML API was retired in January 2026. This package uses the new OAuth2-based REST/JSON API at `apis.usps.com`.
+
+> **Reference:** Official USPS API examples and OpenAPI specs at [github.com/USPS/api-examples](https://github.com/USPS/api-examples).
 
 ## Requirements
 
@@ -356,6 +358,42 @@ Usps::appointments()->updateAppointment($updateData);
 Usps::appointments()->cancelAppointment(['appointmentId' => 'APT-001']);
 ```
 
+### Shipping Options
+
+```php
+// Combined pricing + service standards + available options in one call
+$options = Usps::shippingOptions()->search([
+    'originZIPCode' => '20500',
+    'destinationZIPCode' => '33101',
+    'weight' => 2.5,
+    'length' => 12,
+    'width' => 8,
+    'height' => 4,
+    'mailClass' => 'PRIORITY_MAIL',
+]);
+```
+
+### SCAN Forms
+
+```php
+// Label shipment — link tracking numbers to a single EFN
+$form = Usps::scanForms()->createLabelShipment([
+    'trackingNumbers' => ['9400111899223456789012', '9400111899223456789013'],
+]);
+
+// MID shipment
+$form = Usps::scanForms()->createMidShipment([
+    'MID' => '123456',
+    'trackingNumbers' => ['9400111899223456789012'],
+]);
+
+// Manifest MID shipment
+$form = Usps::scanForms()->createManifestMidShipment([
+    'manifestMID' => '654321',
+    'MID' => '123456',
+]);
+```
+
 ## API Domains
 
 | Domain | Facade Accessor | Endpoints |
@@ -379,6 +417,8 @@ Usps::appointments()->cancelAppointment(['appointmentId' => 'APT-001']);
 | Adjustments | `adjustments()` | 1 |
 | Disputes | `disputes()` | 1 |
 | Appointments | `appointments()` | 4 |
+| Shipping Options | `shippingOptions()` | 1 |
+| SCAN Forms | `scanForms()` | 3 |
 
 ## Authentication
 
