@@ -50,8 +50,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>Laravel <span>USPS</span> <span class="badge">v2.0</span> <span class="badge badge-green">18 APIs</span></h1>
-        <p class="subtitle">Complete USPS API v3 (OAuth2) for Laravel 10-13 -- All 18 API domains, 75+ endpoints</p>
+        <h1>Laravel <span>USPS</span> <span class="badge">v13.2</span> <span class="badge badge-green">20 APIs</span></h1>
+        <p class="subtitle">Complete USPS API v3 (OAuth2) for Laravel 10–13 — All 20 API domains, 80+ endpoints</p>
 
         <div class="card">
             <p>The legacy USPS Web Tools XML API was <strong>retired January 2026</strong>. This package uses the new OAuth2-based REST/JSON API at <span class="inline-code">apis.usps.com</span> with automatic token management and per-scope caching.</p>
@@ -379,6 +379,22 @@ USPS_CLIENT_SECRET=your-client-secret</code></pre>
             </ul>
         </div>
 
+        <div id="shipping-options" class="domain-section">
+            <h3>Shipping Options <span class="inline-code">Usps::shippingOptions()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/shipments/v3/options/search</span> Combined pricing, standards, and available options</li>
+            </ul>
+        </div>
+
+        <div id="scan-forms" class="domain-section">
+            <h3>SCAN Forms <span class="inline-code">Usps::scanForms()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/scan-forms/v3/scan-form</span> Label Shipment — link tracking numbers to EFN</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/scan-forms/v3/scan-form</span> MID Shipment — link by Mailer ID</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/scan-forms/v3/scan-form</span> Manifest MID Shipment — multi-manifest</li>
+            </ul>
+        </div>
+
         <h2>Requirements</h2>
         <table>
             <tbody>
@@ -389,7 +405,7 @@ USPS_CLIENT_SECRET=your-client-secret</code></pre>
         </table>
 
         <footer>
-            <p>MIT License &bull; <a href="https://github.com/johnpaulmedina/laravel-usps">GitHub</a> &bull; By John Paul Medina</p>
+            <p>MIT License &bull; <a href="https://github.com/johnpaulmedina/laravel-usps">GitHub</a> &bull; <a href="https://github.com/USPS/api-examples">USPS API Examples</a> &bull; By John Paul Medina</p>
         </footer>
     </div>
 </body>
