@@ -211,6 +211,8 @@ $result = Usps::zipCodeLookup([
 
 > **Note:** State names are auto-converted to abbreviations (`Florida` → `FL`). ZIP codes with dashes are auto-split (`20500-0005` → ZIP5: `20500`, ZIP4: `0005`).
 
+> **USPS Address API Documentation:** [developer.usps.com/api/81](https://developer.usps.com/api/81) — full response field definitions, DPV codes, correction codes, and error handling.
+
 ### Tracking
 
 ```php
