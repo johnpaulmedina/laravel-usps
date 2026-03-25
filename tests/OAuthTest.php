@@ -42,8 +42,8 @@ class OAuthTest extends TestCase
         $verify->addAddress($address);
         $verify->verify();
 
-        // Token should be cached
-        $cacheKey = 'usps_oauth_token_' . md5('my-client-id');
+        // Token should be cached (key includes scope)
+        $cacheKey = 'usps_oauth_token_' . md5('my-client-id_addresses');
         $this->assertEquals('new-oauth-token', Cache::get($cacheKey));
 
         // OAuth token request was sent with correct params
@@ -88,7 +88,7 @@ class OAuthTest extends TestCase
 
     public function test_cached_token_is_reused(): void
     {
-        $cacheKey = 'usps_oauth_token_' . md5('cached-client');
+        $cacheKey = 'usps_oauth_token_' . md5('cached-client_addresses');
         Cache::put($cacheKey, 'cached-token', 3600);
 
         Http::fake([

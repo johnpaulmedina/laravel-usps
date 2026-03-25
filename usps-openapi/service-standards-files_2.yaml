@@ -1,0 +1,322 @@
+openapi: 3.0.3
+info:
+  title: Service Standards File Download API
+  version: 3.0.3
+  contact:
+    url: https://emailus.usps.com/s/usps-APIs
+  description: |
+    Contact Us: [USPS API Support](https://emailus.usps.com/s/usps-APIs) | [Terms of Service](https://about.usps.com/termsofuse.htm)
+    The Service Standards File Download API provides a secure and efficient way to manage file downloads. It supports two main functionalities:
+
+    1. **Discovery of Available Files**: Retrieve a list of files available for download.
+    2. **Generation of Signed URLs**: Generate secure, temporary URLs for downloading files. These URLs are time-limited and include information about the file size and expiration time.
+
+    The signed URL returned by the Generation endpoint allows consumers to directly download the requested file from a separate storage service. This API does not manage a dedicated download endpoint.
+tags:
+  - name: Files
+    description: Operations related to file management, including listing available files and generating signed URLs.
+
+servers:
+  - url: https://apis.usps.com/service-standards-files/v3
+    description: Primary server endpoint for the Service Standards API that handles file management operations, including listing available files and generating signed URLs for secure downloads.
+  - url: https://apis-tem.usps.com/service-standards-files/v3
+    description: Testing Environment Endpoint
+paths:
+  /files:
+    get:
+      tags:
+        - Files
+      summary: List available files for download
+      operationId: getFiles
+      description: Retrieve a list of files available for download from the Service Standards API.
+      security:
+        - OAuth:
+          - service-standards-files
+      responses:
+        '200':
+          description: A list of available files
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Links'
+              examples:
+                filesExample:
+                  $ref: '#/components/examples/FilesExampleA'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        "401":
+          description: Unauthorized request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        "403":
+          description: Access is denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        "404":
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /files/{fileID}/generate-signed-url:
+    get:
+      tags:
+        - Files
+      summary: Generate a signed URL for downloading a file
+      description: Generate a secure, temporary URL for downloading a specific file using its file ID.
+      operationId: generateSignedUrl
+      parameters:
+        - name: fileID
+          in: path
+          required: true
+          schema:
+            type: string
+            example: Combined_Service_Standard_Directory_MKT
+      security:
+        - OAuth:
+          - service-standards-files
+      responses:
+        '200':
+          description: Signed URL generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  signedURL:
+                    example: https://service-standards-files.usps.com/download/Combined_Service_Standard_Directory%2FCombined_Service_Standard_Directory_03112025_PME.zip?sv=2025-01-05&st=2025-03-26T16%3A10%3A35Z&se=2025-03-27T16%3A15%3A35Z&sr=b&sp=r&sig=i6S%2F9n6VSDehnow0fRUoCPBeKFxUQp3TviZOampup5U%3D
+                    description: |
+                      A fully-qualified SAS URL appended with a secure token that provides temporary, restricted access to the requested file. This SAS URL supports HTTP Range requests, allowing consumers to download files in chunks. This is particularly useful for resuming interrupted downloads or handling very large files.
+                  expiry:
+                    type: string
+                    format: date-time
+                    description: Expiration date and time of the signed URL
+                  contentLength:
+                    type: integer
+                    description: Size of the file in bytes
+                    example: 52428800
+                  rangeLimit:
+                    type: integer
+                    description: The maximum number of bytes that can be downloaded using the signed URL. This value is specified in bytes and ensures that users do not exceed the allocated download limit.
+                    example: 10485760
+              examples:
+                GenerateSignedUrlResponseExample:
+                  $ref: '#/components/examples/GenerateSignedUrlResponseExample'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        "401":
+          description: Unauthorized request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        "403":
+          description: Access is denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        "404":
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+components:
+  schemas:
+    Links:
+      title: Hypermedia Links
+      description: Hypermedia links to related resources.
+      type: array
+      items:
+        type: object
+        required:
+          - rel
+          - href
+        properties:
+          rel:
+            description: The short name(s) of the relationship corresponding to the link.
+            type: array
+            items:
+              type: string
+          title:
+            description: A human-readable title of the link relationship.
+            type: string
+          description:
+            description: A human-readable description of the link relationship.
+            type: string
+          href:
+            description: The URL to a related resource.
+            type: string
+            format: uri
+          method:
+            type: string
+            description: The HTTP method to use to access this link.
+            enum:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+          submissionMediaType:
+            description: The media type of the resource request.
+            type: string
+          targetMediaType:
+            description: The media type of the resource response.
+            type: string
+          publishDate:
+            description: The date and time the file was published.  The date and time will be returned in UTC (Zulu) format.
+            example: "2025-04-24T19:42:28Z"
+            type: string
+            format: date-time
+        additionalProperties: false
+    ErrorMessage:
+      title: Error
+      type: object
+      properties:
+        apiVersion:
+          type: string
+          description: The version of the API that was used and that raised the error.
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: The error status code that has been returned in response to the request.
+            message:
+              type: string
+              description: A human-readable message describing the error.
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status code response returned to the client.
+                  code:
+                    type: string
+                    description: An internal subordinate code used for error diagnosis.
+                  title:
+                    type: string
+                    description: A human-readable title that identifies the error.
+                  detail:
+                    type: string
+                    description: A human-readable description of the error that occurred.
+                  source:
+                    type: object
+                    properties:
+                      parameter:
+                        type: string
+                        description: The input in the request which caused an error.
+                      example:
+                        type: string
+                        description: An example of a valid value for the input parameter.
+                    additionalProperties: true
+                    description: The element that is suspected of originating the error. Helps to pinpoint the problem.
+          additionalProperties: true
+          description: The high-level error that has occurred as indicated by the status code.
+      additionalProperties: true
+      description: Standard error message response.
+ 
+  examples:
+    FilesExampleA:
+      description: List of files currently available for download
+      summary: List of files
+      value:
+        - rel:
+            - self
+          title: Complete Service Standard Data
+          href: https://apis.usps.com/service-standards-files/files/Combined_Service_Standard_Directory_MKT/generate-signed-url
+          method: GET
+          targetMediaType: application/zip
+          publishDate: 2025-06-12T22:15:23Z
+        - rel:
+            - self
+          title: Base Service Standard Data
+          href: https://apis.usps.com/service-standards-files/files/Combined_Service_Standard_Directory_PKG/generate-signed-url
+          method: GET
+          targetMediaType: application/zip
+          publishDate: 2025-05-16T16:45:23Z
+        - rel:
+            - self
+          title: Service Standard Exception Data
+          href: https://apis.usps.com/service-standards-files/files/Combined_Service_Standard_Directory_PME/generate-signed-url
+          method: GET
+          targetMediaType: application/zip
+          publishDate: 2025-03-25T19:25:15Z
+    GenerateSignedUrlResponseExample:
+      summary: Example response for generating a signed URL
+      value:
+        signedURL: "https://service-standards-files.usps.com/download/Combined_Service_Standard_Directory%2FCombined_Service_Standard_Directory_03112025_PME.zip?sv=2025-01-05&st=2025-03-26T16%3A10%3A35Z&se=2025-03-27T16%3A15%3A35Z&sr=b&sp=r&sig=i6S%2F9n6VSDehnow0fRUoCPBeKFxUQp3TviZOampup5U%3D"
+        expiry: "2025-06-27T13:22:21.557196124"
+        contentLength: 52428800
+        rangeLimit: 10485760
+  securitySchemes:
+    OAuth:
+      type: oauth2
+      description: The specified APIs accept an access token formatted as a JSON Web Token. The relative path to the OAuth2 version 3 API which supplies this access token is provided below for reference.
+      flows:
+        clientCredentials:
+          tokenUrl: /oauth2/v3/token
+          scopes:
+            service-standards: Read access to Service Standards.
+        authorizationCode:
+          authorizationUrl: /oauth2/v3/authorize
+          tokenUrl: /oauth2/v3/token
+          scopes:
+            service-standards: Read access to Service Standards.

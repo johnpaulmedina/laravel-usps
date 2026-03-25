@@ -1,0 +1,567 @@
+openapi: 3.0.1
+
+info:
+  title: Mailer Review Disputes API
+  description: |
+    Contact Us: [USPS API Support](https://emailus.usps.com/s/web-tools-inquiry) | [Terms of Service](https://about.usps.com/termsofuse.htm)
+    
+    The Mailer Review Disputes API provides an interface to allow users to create disputes for USPS pricing.  This API is designed to provide users a path to submit a tracking number and transaction for mailer review in the event that the assessed package charges are not aligned with what the user claimed and mailed.  By leveraging this API, users can submit a reason for mailer review and justification for why the assessed pricing was incorrect to receive an adjustment or adjudication on their claim.
+
+  version: 3.0.4
+
+servers:
+  - url: https://apis.usps.com/disputes/v3
+    description: Production Environment Endpoint 
+security:
+- OAuth:
+  - disputes
+
+paths:
+   /dispute:
+    post:
+      tags:
+        - Resources
+      summary: Creates a dispute request.
+      description: |
+        Returns a  dispute request details.
+
+      operationId: post_dispute
+      requestBody:
+        description: The parameters to be used for the query.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DisputeCreateRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dispute'
+        '400':
+          description: Bad Request.  There is an error in the received request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            examples: {}
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        "403":
+          description: Access is denied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '503':
+          description: Service is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            examples: {}
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+
+components:
+  schemas:
+    DisputeValidationRequest:
+      required:
+        - EPSTransactionID
+        - trackingID
+      type: object
+      properties:
+        EPSTransactionID:
+          type: string
+          description: EPS Transaction ID for the Census charge.
+          minLength: 1
+          maxLength: 28
+        trackingID:
+          type: string
+          description: IMpb barcode for the package.
+          minLength: 1
+          maxLength: 34
+        CRID:
+          type: string
+          description: Customer Registration ID (CRID) of the mail owner.
+          minLength: 1
+          maxLength: 18
+
+    DisputeValidationResult:
+      type: object
+      properties:
+        trackingID:
+          type: string
+          description: IMpb barcode for the package.
+          minLength: 1
+          maxLength: 34
+        EPSTransactionID:
+          type: string
+          description: EPS Transaction ID for the Census charge.
+          minLength: 1
+          maxLength: 28
+        CRID:
+          type: string
+          minLength: 1
+          maxLength: 18
+          description: Customer Registration ID (CRID) of the mail owner.
+        disputeValid:
+          type: string
+          description: Indicates if the dispute can be created. 'Y' for yes, 'N' for no.
+          enum: 
+            - Y
+            - N
+          default: N
+          example: "N"
+        paymentResponse:
+          type: object
+          description: Payment validation response details, if available.
+          properties:
+            CRID:
+              type: string
+              description: Customer Registration ID (CRID) of the mail owner.
+              minLength: 1
+              maxLength: 18
+            IMPB:
+              type: string
+              description: IMpb barcode for the package.
+              minLength: 1
+              maxLength: 34
+            EPSTransactionID:
+              type: string
+              description: EPS Transaction ID for the Census charge.
+              minLength: 1
+              maxLength: 28
+            transactionValid:
+              type: string
+              description: Indicated if the dispute has a valid trasaction. 'Y' for yes, 'N' for no.
+              enum: 
+                - Y
+                - N
+            detail:
+              type: object
+              description: Details about the payment transaction.
+              properties:
+                customerReferenceNumber1:
+                  type: string
+                  description: Customer Reference Number 1.
+                  minLength: 1
+                  maxLength: 30
+                customerReferenceNumber2:
+                  type: string
+                  description: Customer Reference Number 2.
+                  minLength: 1
+                  maxLength: 30
+                CRID:
+                  type: string
+                  description: Customer Registration ID (CRID) of the mail owner.
+                  minLength: 1
+                  maxLength: 18
+                mailerID:
+                  type: string
+                  description: Mailer ID associated with the package.
+                  minLength: 1
+                  maxLength: 10
+                mailClassCode:
+                  type: string
+                  description: Mail Class Code indicating the type of mail service used.
+                  minLength: 1
+                  maxLength: 2
+                PIC:
+                  type: string
+                  description: Package Identification Code.
+                  minLength: 1
+                  maxLength: 34
+                IMPB:
+                  type: string
+                  description: IMpb barcode for the package.
+                  minLength: 1
+                  maxLength: 34
+                packageScanGroupingID:
+                  type: string
+                  description: Package Scan Grouping ID.
+                  minLength: 1
+                  maxLength: 36
+                manifestPackageID:
+                  type: string
+                  description: Manifest Package ID for the package.
+                  minLength: 1
+                  maxLength: 32
+                censusPiecePostage:
+                  type: number
+                  description: Postage amount for the census piece.
+                EPSAccountNumber:
+                  type: string
+                  description: EPS account number associated with the transaction.
+                  minLength: 1
+                  maxLength: 10
+                EPSTransactionID:
+                  type: string
+                  description: EPS Transaction ID for the payment transaction.
+                  minLength: 1
+                  maxLength: 28
+                EPSTransactionTime:
+                  type: string
+                  format: date-time
+                  description: Date and time of the EPS transaction in ISO 8601 format with milliseconds, but without a timezone designator.
+                EPSTotalPostage:
+                  type: number
+                  description: Total postage amount for the EPS transaction.
+                transType:
+                  type: string
+                  description: Type of the transaction.
+                  minLength: 1
+                  maxLength: 10
+              additionalProperties: true
+          additionalProperties: true
+        AcctMgmtResponse:
+          allOf:
+            - $ref: '#/components/schemas/MgmtResponse'
+          description: Account management response details, if available.
+      additionalProperties: true
+
+    DisputeCreateRequest:
+      required:
+        - EPSTransactionID
+        - trackingID
+        - CRID
+        - reason
+        - description
+        - name
+        - disputeCount
+      type: object
+      properties:
+        EPSTransactionID:
+          type: string
+          description: EPS Transaction ID for the Census charge.
+          minLength: 1
+          maxLength: 28
+        trackingID:
+          type: string
+          description: IMpb barcode for the package.
+          minLength: 1
+          maxLength: 34
+        CRID:
+          type: string
+          description: Customer Registration ID (CRID) of the mail owner.
+          minLength: 1
+          maxLength: 18
+        reason:
+          type: string
+          description: Reason for the dispute.
+          enum:
+            - INCORRECT_ASSESSED_WEIGHT
+            - INCORRECT_ASSESSED_ZONE
+            - INCORRECT_ASSESSED_PACKAGING
+            - INCORRECT_ASSESSED_DIMENSIONS
+            - INCORRECT_ASSESSED_DUPLICATE
+            - UNDOCUMENTED
+            - NONCOMPLIANT_DIMENSIONS
+            - RETURN_LABEL
+            - MISSHIPPED
+            - OTHER
+        description:
+          type: string
+          minLength: 0
+          maxLength: 1000
+          description: Free text describing the dispute.
+        name:
+          type: string
+          description: Name of the individual or entity submitting the dispute.
+          minLength: 1
+          maxLength: 100
+        disputeCount:
+          type: string
+          description: Number of times a dispute has been opened.
+          minLength: 1
+          maxLength: 1000
+
+    Dispute:
+      type: object
+      properties:
+        disputeID:
+          type: string
+          description: Unique identifier for the dispute.
+          minLength: 1
+          maxLength: 10
+        EPSTransactionID:
+          type: string
+          description: EPS Transaction ID for the Census charge associated with the dispute.
+          minLength: 1
+          maxLength: 28
+        trackingID:
+          type: string
+          description: IMpb barcode for the package related to the dispute.
+          minLength: 1
+          maxLength: 34
+        CRID:
+          type: string
+          description: Customer Registration ID (CRID) of the mail owner.
+          minLength: 1
+          maxLength: 18
+        amount:
+          type: number
+          description: Disputed amount.
+        reason:
+          type: string
+          description: Reason for submitted dispute.
+        description:
+          type: string
+          minLength: 0
+          maxLength: 1000
+          description: Additional description or details about the dispute.
+        name:
+          type: string
+          description: Name of the individual or entity that submitted the dispute.
+          minLength: 1
+          maxLength: 100
+        status:
+          type: string
+          description: Status of the dispute.
+          enum:
+            - NEW
+            - APPROVED
+            - REJECTED
+        submissionDate:
+          type: string
+          format: date-time
+          description: Date and time when the dispute was submitted in ISO 8601 format with UTC timezone.
+        disputeValid:
+          type: string
+          description: Indicates if the dispute can be created. 'Y' for yes, 'N' for no.
+          enum: 
+            - Y
+            - N
+          default: N
+          example: "N"
+        paymentResponse:
+          type: object
+          description: Payment validation response details, if available.
+          properties:
+            CRID:
+              type: string
+              description: Customer Registration ID (CRID) of the mail owner.
+              minLength: 1
+              maxLength: 18
+            IMPB:
+              type: string
+              description: IMpb barcode for the package.
+              minLength: 1
+              maxLength: 34
+            EPSTransactionID:
+              type: string
+              description: EPS Transaction ID for the payment transaction.
+              minLength: 1
+              maxLength: 28
+            transactionValid:
+              type: string
+              description: Indicates if the dispute has a valid transaction. 'Y' for yes, 'N' for no.
+              enum: 
+                - Y
+                - N
+            detail:
+              type: object
+              description: Details about the payment transaction.
+              properties:
+                customerReferenceNumber1:
+                  type: string
+                  description: Customer Reference Number 1.
+                  minLength: 1
+                  maxLength: 30
+                customerReferenceNumber2:
+                  type: string
+                  description: Customer Reference Number 2.
+                  minLength: 1
+                  maxLength: 30
+                CRID:
+                  type: string
+                  description: Customer Registration ID (CRID) of the mail owner.
+                  minLength: 1
+                  maxLength: 18
+                mailerID:
+                  type: string
+                  description: Mailer ID associated with the package.
+                  minLength: 1
+                  maxLength: 10
+                mailClassCode:
+                  type: string
+                  description: Mail Class Code indicating the type of mail service used.
+                  minLength: 1
+                  maxLength: 2
+                PIC:
+                  type: string
+                  description: Package Identification Code.
+                  minLength: 1
+                  maxLength: 34
+                IMPB:
+                  type: string
+                  description: IMpb barcode for the package.
+                  minLength: 1
+                  maxLength: 34
+                packageScanGroupingID:
+                  type: string
+                  description: Package Scan Grouping ID.
+                  minLength: 1
+                  maxLength: 36
+                manifestPackageID:
+                  type: string
+                  description: Manifest Package ID for the package.
+                  minLength: 1
+                  maxLength: 32
+                censusPiecePostage:
+                  type: number
+                  description: Postage amount for the census piece.
+                EPSAccountNumber:
+                  type: string
+                  description: EPS account number associated with the transaction.
+                  minLength: 1
+                  maxLength: 10
+                EPSTransactionID:
+                  type: string
+                  description: EPS Transaction ID for the payment transaction.
+                  minLength: 1
+                  maxLength: 28
+                EPSTransactionTime:
+                  type: string
+                  format: date-time
+                  description: Date and time of the EPS transaction in ISO 8601 format with milliseconds, but without a timezone designator.
+                EPSTotalPostage:
+                  type: number
+                  description: Total postage amount for the EPS transaction.
+                transType:
+                  type: string
+                  description: Type of the transaction.
+                  minLength: 1
+                  maxLength: 10
+              additionalProperties: true
+          additionalProperties: true
+        AcctMgmtResponse:
+          allOf:
+            - $ref: '#/components/schemas/MgmtResponse'
+          description: Account management response details, if available.
+    MgmtResponse:   
+      type: object
+      properties:
+        companyName:
+          type: string
+          description: Name of the company associated with the account.
+          minLength: 1
+          maxLength: 30
+        addressLine1:
+          type: string
+          maxLength: 50
+          minLength: 1
+          description: Primary address line for the account.
+        addressLine2:
+          type: string
+          maxLength: 50
+          minLength: 1
+          description: Secondary address line for the account, if applicable.
+        addressLine3:
+          type: string
+          maxLength: 50
+          minLength: 1
+          description: Additional address line for the account, if applicable. 
+        city:
+          type: string
+          maxLength: 28
+          minLength: 1
+          description: City of the account address.
+        state:
+          type: string
+          pattern: ^(AA|AE|AL|AK|AP|AS|AZ|AR|CA|CO|CT|DE|DC|FM|FL|GA|GU|HI|ID|IL|IN|IA|KS|KY|LA|ME|MH|MD|MA|MI|MN|MS|MO|MP|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PW|PA|PR|RI|SC|SD|TN|TX|UT|VT|VI|VA|WA|WV|WI|WY)$
+          description: This is the two-character state code of the address.
+        ZIPCode:
+          type: string
+          pattern: ^\d{5}-\d{4}?$
+          description: This is the 9-digit ZIP code in the format '12345-6789'.
+        urbanization:
+          type: string
+          minLength: 1
+          maxLength: 96
+          description: Urbanization information for the address, if applicable.
+        APVDisputeFlag:
+          type: string
+          description: Indicates if an Automated Package Verification (APV) dispute is allowed. 'Y' for yes, 'N' for no.
+          enum: 
+            - Y
+            - N
+      additionalProperties: true
+
+
+    ErrorMessage:
+      title: Error
+      type: object
+      properties:
+        apiVersion:
+          type: string
+          description: The version of the API that was used and that raised the error.
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: The error status code that has been returned in response
+                to the request.
+            message:
+              type: string
+              description: A human-readable message describing the error.
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status code response returned to the client.
+                  code:
+                    type: string
+                    description: An internal subordinate code used for error diagnosis.
+                  title:
+                    type: string
+                    description: A human-readable title that identifies the error.
+                  detail:
+                    type: string
+                    description: A human-readable description of the error that occurred.
+                  source:
+                    type: object
+                    properties:
+                      parameter:
+                        type: string
+                        description: The input in the request which caused an error.
+                      example:
+                        type: string
+                        description: An example of a valid value for the input parameter.
+                    additionalProperties: true
+                    description: The element that is suspected of originating the error.  Helps to pinpoint the problem.
+                additionalProperties: true
+          additionalProperties: true
+          description: The high-level error that has occurred as indicated by the status code.
+      additionalProperties: true
+      description: Standard error message response.
+
+  securitySchemes:
+        OAuth:
+          type: oauth2
+          description: The specified APIs accept an access token formatted as a JSON Web Token. The relative path to the OAuth2 version 3 API which supplies this access token is provided below for reference.
+          flows:
+            clientCredentials:
+              tokenUrl: /oauth2/v3/token
+              scopes:
+                disputes: "Read, and write access to resources."
+            authorizationCode:
+              authorizationUrl: /oauth2/v3/authorize
+              tokenUrl: /oauth2/v3/token
+              scopes:
+                disputes: "Read, and write access to resources."

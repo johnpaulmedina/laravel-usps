@@ -18,7 +18,7 @@ class AddressVerifyTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Cache::put('usps_oauth_token_' . md5('test-client-id'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . md5('test-client-id_addresses'), 'fake-token', 3600);
     }
 
     public function test_verify_returns_error_when_no_address_added(): void

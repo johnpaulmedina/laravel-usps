@@ -1,0 +1,1780 @@
+---
+openapi: 3.0.0
+info:
+  title: Informed Delivery Mail Campaigns
+  description: |   
+    Contact Us: [USPS Informed Delivery API Support](mailto:uspsinformeddeliveryapi@usps.gov) | [Terms of Service](https://about.usps.com/termsofuse.htm)
+    
+    This API allows users to manage interactive Informed Delivery Mail Campaigns. Refer to the [Informed Delivery API PostalPro](https://postalpro.usps.com/idapi) page for more information.  Informed Delivery campaigns allow mailers to tie their physical mailpieces to interactive Informed Delivery campaigns to be displayed in the Informed Delivery Daily Digest email, the Informed Delivery Consumer Portal website, and Informed Delivery mobile application during the campaign duration. The endpoints available in this API allow mailers to do the following:
+
+      - Create a new Informed Delivery mail campaign (MID, SEQ, or NON-SEQ)
+      - Edit or cancel a previously submitted Informed Delivery mail campaign
+      - View details on all Informed Delivery mail campaigns for a given CRID
+      - View details on a single Informed Delivery mail campaign
+      - Add IMbs to NON-SEQ Informed Delivery campaigns
+    
+    To set up a new Informed Delivery mail campaign, mailers will need to provide a start date and end date for the campaign, Ride-along and Representative images to be displayed as part of the Informed Delivery digital campaign (provided in base64 format), as well as a Target URL that Informed Delivery users will be taken to when clicking on the mail campaign hyperlink or image.
+    
+    In general, Informed Delivery will display an Informed Delivery mail campaign for any mailpieces associated with the campaign during the campaign's duration. When setting up a new Informed Delivery campaign, mailers have different options for how their mailpieces will be associated to campaigns.
+
+      - A01/NON-SEQ campaign type - “shell” campaigns that are submitted first with no associated serial ranges. Once the campaign is submitted, full IMbs are then added to the campaign using a separate API request.
+      - A02/MID campaign type – any mailpieces with the same MID as the campaign's MID are tied to the digital Informed Delivery campaign.
+      - A03/SEQ campaign type - Any mailpieces with the same MID as the campaign's MID and a serial number that falls within the campaign's serial range are tied to the digital Informed Delivery campaign.
+
+      To gain access to the ID APIs for a given CRID, mailers will need to undergo an onboarding process with the Informed Delivery Program Office. At the outset of this onboarding, mailers will need to have an Apigee client application created in the Customer Onboarding Portal (COP) that has access to the Informed Delivery Mail Campaigns API product for CRIDs that they have been given access to. Informed Delivery Mailer Campaign Portal access (available in the BCG) is a pre-requisite for accessing the Informed Delivery Mail Campaign API.
+
+  version: 1.2.0
+  x-reviewed-on: 2025-12-10
+  x-updated-on: 2026-01-15
+servers:
+  - url: https://apis.usps.com/informed-delivery-campaigns
+    description: Production Environment Endpoint
+security:
+  - OAuth:
+    - campaigns
+paths:
+  /campaigns/{CRID}:
+    post:
+      tags:
+        - Resources
+      summary: Create an Informed Delivery campaign
+      description: Create a new Informed Delivery campaign
+      operationId: post-campaigns
+      parameters:
+        - name: CRID
+          in: path
+          description: The campaign submitter's Customer Registration ID (CRID).
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Campaign'
+        required: true
+      responses:
+        "201":
+          description: Created - Location Header has Campaign Detail API URL
+          headers:
+            Location:
+              style: simple
+              explode: false
+              schema:
+                type: string
+                example: /campaign/v3
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Campaign Duplicate:
+                  $ref: '#/components/examples/campaignDuplicate'
+                Campaign MID Serial Ovrerlap:
+                  $ref: '#/components/examples/campaignMIDSerialOverlap'
+                Campaign MID Ovrerlap:
+                  $ref: '#/components/examples/campaignMIDOverlap'
+        "401":
+          description: Unauthorized
+          headers:
+            WWW-Authenticate:
+              $ref: '#/components/headers/WWWAuthenticate'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        "429":
+          description: Too Many Requests. Too many requests have been received from client in a short amout of time.
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        default:
+          description: An unanticipated error has occurred.
+      security:
+        - OAuth:
+            - campaigns
+    get:
+      tags:
+        - Resources
+      summary: Search all campaigns for Submitter CRID
+      description: Search, filter, sort, and paginate campaigns for a given Submitter CRID
+      operationId: query-mail-campaigns
+      parameters:
+        - name: CRID
+          in: path
+          description: The campaign submitter's Customer Registration ID (CRID).
+          required: true
+          schema:
+            type: string
+        - name: offset
+          in: query
+          description: Number of records to skip before returning results. This field must be either be 0 or be a multiple of the limit variable (e.g., is limit is 10, offset can be 0, 10, 20, etc.). If no offset parameter is included at all, a default of 0 will be used.
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0            
+        - name: limit
+          in: query
+          description: Number of results per page. This field must be a number between 1 and 1000. If no limit parameter is included at all, a default of 100 will be used.
+          required: false
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 1000
+        - name: sort
+          in: query
+          description: Sorting order for results. To use this, an integrator can input any column that they would like to sort by (e.g., sort=brandDisplayName,desc). An integrator can indicate either an ascending or descending order by inputting asc or desc after the field name. If asc or desc is not included, then the field will be sorted ascending by default. If no sort parameter is included at all, the response will be sorted by lastModifiedDatetime,desc by default.
+          required: false
+          schema:
+            type: string
+        - name: ezsearch
+          in: query
+          description: This filter will do a "contains" search across the Campaign Code, Brand Display Name, and Campaign Title fields. For example inputting "Sale" will return any campaign for the CRID with a Campaign Title, Campaign Code, or Brand Display Name that contains the word "Sale".
+          required: false
+          schema:
+            type: string
+        - name: barcodeCount
+          in: query
+          description: |-
+            Number of IMBs associated with a NON-SEQ campaign. This count will always be 0 for MID, SEQ, and SAT campaigns.
+          required: false
+          schema:
+            type: number
+        - name: brandDisplayName
+          in: query
+          description: User defined field that is placed on Informed Delivery's UIs when campaign is displayed.          
+          required: false
+          schema:
+            type: string
+        - name: campaignCode
+          in: query
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.          
+          required: false
+          schema:
+            type: string
+        - name: MID
+          in: query
+          description: "The Mailer ID for the campaign - this field will be used to match IMBs to MID and SEQ type campaigns. If an IMB has the Mailer ID (MID) associated with an active MID/SEQ campaign, it is eligible to be displayed with the campaign's image and Target URL."        
+          required: false
+          schema:
+            type: string
+        - name: mailpieceShape
+          in: query
+          description: |-
+            Identifier on what types of mail pieces the campaign should be applied to
+             * LT (Letter)
+             * CD (Card)
+             * FL (Flat) 
+            
+            When filtering, either the LT/CD/FL or Letter/Card/Flat values can be used.
+          required: false
+          schema:
+            type: string
+        - name: campaignTitle
+          in: query
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.          
+          required: false
+          schema:
+            type: string
+        - name: campaignType
+          in: query
+          description: |-
+            Identifier on how the campaign should be applied to mail pieces
+             * A01 (Non-Sequential or NON-SEQ): Individual barcodes added to campaign after submission
+             * A02 (Mailer ID or MID): All mailpieces with given Mailer ID added to campaign
+             * A03 (Sequential or SEQ): All mailpieces with given Mailer ID and serial range added to campaign
+             * A04 (Saturation or SAT): Mailpieces will be matched to saturation pieces
+             
+             When filtering, either the A01/A02/A03/A04 or NON-SEQ/MID/SEQ/SAT values can be used.
+          required: false
+          schema:
+            type: string
+        - name: createdDatetime
+          in: query
+          description: Date of initial campaign creation. For this parameter to work correctly, it must be used in conjunction with a >, >=, <, or <= operator (e.g, "createdDatetime>2025-07-05").
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: campaignSource
+          in: query
+          description: "Gives information on system that was originally used to create campaign (e.g. API, PO!, MCP, Admin Console). This field will not update if campaign is subsequently edited or cancelled."          
+          required: false
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          description: Last day campaign will be displayed
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endSerial
+          in: query
+          description: The upper limit of the serial range for SEQ type campaigns. This field is required for SEQ campaigns only and is not allowed for submission for any other campaign types.
+          required: false
+          schema:
+            type: string
+        - name: lastModifiedDatetime
+          in: query
+          description: Date of last update made to campaign, inclusive of status changes that occur when a campaign activates or completes. For this parameter to work correctly, it must be used in conjunction with a >, >=, <, or <= operator (e.g, "lastModifiedDatetime>2025-07-05").
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: lastModifiedSource
+          in: query
+          description: "Gives information on system that was used to make last update to campaign (e.g. API, PO!, MCP, Admin Console). This field will update each time a campaign is created, edited, or cancelled."
+          required: false
+          schema:
+            type: string
+        - name: lastModifiedUsername
+          in: query
+          description: "Gives information on Cust Reg user name associated with last update to campaign. This field will update each time a campaign is created, edited, or cancelled."
+          required: false
+          schema:
+            type: string
+        - name: mailOwnerCRID
+          in: query
+          description: Customer Registration ID (CRID) of the Mail Owner associated with the Informed Delivery campaign.
+          required: false
+          schema:
+            type: string
+        - name: mailOwnerName
+          in: query
+          description: Name of the Mail Owner associated with the Informed Delivery campaign.
+          required: false
+          schema:
+            type: string
+        - name: postalOneSaturationJobID
+          in: query
+          description: "A PostalOne! generated unique identifier for a saturation type campaign. This field should not be used for NON-SEQ, MID, or SEQ campaigns."
+          required: false
+          schema:
+            type: string
+        - name: isShareable
+          in: query
+          description: "An indicator dictating whether a campaign is eligible for Social Sharing. By default, mail campaigns will be displayed alongside options to share the campaign to various social media platforms. If a mailer opts out of this feature, then these options will not be displayed with the campaign."
+          required: false
+          schema:
+            type: boolean
+        - name: startDate
+          in: query
+          description: First day campaign will be displayed
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: startSerial
+          in: query
+          description: The lower limit of the serial range for SEQ type campaigns. This field is required for SEQ campaigns only and is not allowed for submission for any other campaign types.
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: "Status of campaign - possible values include Submitted, Active, Complete, Inactive, Draft, Cancelled, and Deleted"
+          required: false
+          schema:
+            type: string
+            enum: [SUBMITTED,ACTIVE,COMPLETE,CANCELLED,DELETED,DRAFT,INACTIVE]
+        - name: submittedDatetime
+          in: query
+          description: Date of initial campaign submission. For this parameter to work correctly, it must be used in conjunction with a >, >=, <, or <= operator (e.g, "submittedDatetime>2025-07-05").
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: hasUrlParams
+          in: query
+          description: "An indicator dictating whether a campaign is eligible for MID and Serial Number parameters to be appended to the end of the Target URL for tracking purposes. By default, the MID and Serial Number parameters for a given mailpiece will be added to end of the Target URL that users are taken to upon clicking on a campaign. If a mailer opts out of this feature, then these MID and Serial Number fields will not be appended to the campaign's Target URL."
+          required: false
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryString'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Campaign Invalid Parameter:
+                  $ref: '#/components/examples/queryStringInvalidParameter'                
+                Campaign Invalid Sort Value:
+                  $ref: '#/components/examples/queryStringInvalidSortValue'                
+        default:
+          description: An unanticipated error has occurred.
+      security:
+        - OAuth:
+            - campaigns
+  /campaigns/{CRID}/{campaignID}:
+    get:
+      tags:
+        - Resources
+      summary: Return a single Informed Delivery campaign
+      description: Return a single Informed Delivery campaign for a given Submitter CRID and Campaign ID
+      operationId: get-campaigns
+      parameters:
+        - name: CRID
+          in: path
+          description: The campaign submitter's Customer Registration ID (CRID).
+          required: true
+          style: simple
+          explode: true
+          schema:
+            type: string
+        - name: campaignID
+          in: path
+          description: ID of Informed Delivery campaign
+          required: true
+          style: simple
+          explode: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Campaign Invalid Campaign ID for Submitter CRID:
+                  $ref: '#/components/examples/invalidCampaignIDforSubmitterCRID'                   
+        "401":
+          description: Unauthorized
+          headers:
+            WWW-Authenticate:
+              $ref: '#/components/headers/WWWAuthenticate'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        "429":
+          description: Too Many Requests. Too many requests have been received from client in a short amout of time.
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        default:
+          description: An unanticipated error has occurred.
+      security:
+        - OAuth:
+            - campaigns
+    delete:
+      tags:
+        - Resources
+      summary: Cancel an Informed Delivery campaign
+      description: Cancel a previously existing Informed Delivery campaign
+      operationId: delete-campaigns
+      parameters:
+        - name: CRID
+          in: path
+          description: The campaign submitter's Customer Registration ID (CRID).
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: campaignID
+          in: path
+          description: ID of Informed Delivery campaign
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful Operation
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Campaign Cancelled Invalid:
+                  $ref: '#/components/examples/campaignCancelInvalid'
+                CampaignID Delete Invalid:
+                  $ref: '#/components/examples/campaignIDDeleteInvalid'
+                Campaign Invalid Campaign ID for Submitter CRID:
+                  $ref: '#/components/examples/invalidCampaignIDforSubmitterCRID'                  
+        "401":
+          description: Unauthorized
+          headers:
+            WWW-Authenticate:
+              $ref: '#/components/headers/WWWAuthenticate'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        "429":
+          description: Too Many Requests. Too many requests have been received from client in a short amout of time.
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        default:
+          description: An unanticipated error has occurred.
+      security:
+        - OAuth:
+            - campaigns
+    put:
+      tags:
+        - Resources
+      summary: Edit an Informed Delivery campaign
+      description: Edit a previously existing Informed Delivery campaign
+      operationId: put-campaigns
+      parameters:
+        - name: CRID
+          in: path
+          description: The campaign submitter's Customer Registration ID (CRID).
+          required: true
+          schema:
+            type: string
+        - name: campaignID
+          in: path
+          description: ID of Informed Delivery campaign
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignEdit'
+        required: true
+      responses:
+        "200":
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignEditResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Campaign Duplicate:
+                  $ref: '#/components/examples/campaignDuplicate'
+                Campaign MID Serial Ovrerlap:
+                  $ref: '#/components/examples/campaignMIDSerialOverlap'
+                Campaign MID Ovrerlap:
+                  $ref: '#/components/examples/campaignMIDOverlap'
+                Campaign Invalid Campaign ID for Submitter CRID:
+                  $ref: '#/components/examples/invalidCampaignIDforSubmitterCRID'                  
+      security:
+        - OAuth:
+            - campaigns
+  /campaigns/{CRID}/{campaignID}/pieces:
+    post:
+      tags:
+        - Resources
+      summary: Add IMBs to a NON-SEQ campaign
+      description: Add IMBs to an existing NON-SEQ campaign
+      operationId: post-add IMB
+      parameters:
+        - name: CRID
+          in: path
+          description: The campaign submitter's Customer Registration ID (CRID).
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: campaignID
+          in: path
+          description: "Unique identifier for an Informed Delivery campaign, generated internally by Informed Delivery and returned for successfully created campaigns."
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IMBsRequest'
+        required: true
+      responses:
+        "201":
+          description: Success with <= 25 IMBs
+          headers:
+            Location:
+              style: simple
+              explode: false
+              schema:
+                type: string
+                example: /campaign/v3
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IMBsResponseLessThan25Success'
+        "202":
+          description: Success with > 25 IMBs
+          headers:
+            Location:
+              style: simple
+              explode: false
+              schema:
+                type: string
+                example: /campaign/v3
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IMBsResponseMoreThan25Success'
+        "207":
+          description: Partial success of IMBs
+          headers:
+            Location:
+              style: simple
+              explode: false
+              schema:
+                type: string
+                example: /campaign/v3
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IMBsPartialSuccess'
+              examples:  
+                Partial Success:
+                  $ref: '#/components/examples/IMBsPartialSuccess'                   
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                -  $ref: '#/components/schemas/IMBsErrorMessage'
+                -  $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Campaign Duplicate:
+                  $ref: '#/components/examples/invalidCampaignIDforSubmitterCRID'     
+                Campaign Ineligible for Adding IMbs:
+                  $ref: '#/components/examples/CampaignNotEligibleForAddingIMbs'  
+                IMB In Campaign:
+                  $ref: '#/components/examples/IMBInCampaign'    
+                IMB Invalid Format:
+                  $ref: '#/components/examples/IMBInvalidFormat'                      
+      security:
+        - OAuth:
+            - campaigns
+  /campaigns/{CRID}/callback:
+    get:
+      tags:
+        - Resources
+      summary: Search all callback keys for  Submitter CRID
+      description: Search all callback keys for Add Many IMB transactions performed by given Submitter CRID
+      operationId: get-campaigns-callback
+      parameters:
+        - name: CRID
+          in: path
+          description: The campaign submitter's Customer Registration ID (CRID).
+          required: true
+          schema:
+            type: string
+        - name: offset
+          in: query
+          description: Number of records to skip before returning results. This field must be either be 0 or be a multiple of the limit variable (e.g., is limit is 10, offset can be 0, 10, 20, etc.). If no offset parameter is included at all, a default of 0 will be used.
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: limit
+          in: query
+          description: Number of results per page. This field must be a number between 1 and 1000. If no limit parameter is included at all, a default of 100 will be used.
+          required: false
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 1000
+        - name: sort
+          in: query
+          description: Sorting order for results. To use this, an integrator can input any column that they would like to sort by (e.g., sort=submittedDatetime,desc). An integrator can indicate either an ascending or descending order by inputting asc or desc after the field name. If asc or desc is not included, then the field will be sorted ascending by default. If no sort parameter is included at all, the response will be sorted by submittedDatetime,desc by default.
+          required: false
+          schema:
+            type: string
+        - name: campaignID
+          in: query
+          description: ID of the Informed Delivery campaign associated with the callback key transaction.
+          required: false
+          schema:
+            type: string
+        - name: submittedDatetime
+          in: query
+          description: Date of initial callback key transaction. For this parameter to work correctly, it must be used in conjunction with a >, >=, <, or <= operator (e.g, "submittedDatetime>2025-07-05").
+          required: false          
+          schema:
+            type: string
+            format: date
+        - name: totalBarcodes
+          in: query
+          description: The total number of barcodes in a single callback key transaction.
+          required: false
+          schema:
+            type: number
+        - name: totalBarcodesAdded
+          in: query
+          description: The total number of barcodes successfully added to the campaign via the callback key transaction.
+          required: false
+          schema:
+            type: number
+        - name: totalBarcodesFailed
+          in: query
+          description: The total number of barcodes that failed to be added to the campaign via the callback key transaction.
+          required: false
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  callbackKeys:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        callbackKey:
+                          type: string
+                          description: The callback key associated with the Add Many IMB transaction.
+                        campaignID:
+                          type: string
+                          description: The campaign ID associated with the callback key transaction.
+                        submitterCRID:
+                          type: string
+                          description: The submitter's CRID.
+                        submitterTransactionID:
+                          type: string
+                          description: The submitter's transaction ID associated with the callback key transaction.
+                        submittedDatetime:
+                          type: string
+                          description: Date and time of the callback key transaction.
+                          format: date-time                          
+                        totalBarcodes:
+                          type: number
+                          description: The total number of barcodes in the callback key transaction.
+                        totalBarcodesAdded:
+                          type: number
+                          description: The total number of barcodes successfully added to the campaign via the callback key transaction.
+                        totalBarcodesFailed:
+                          type: number
+                          description: The total number of barcodes that failed to be added to the campaign via the callback key transaction.
+                        expirationDatetime:
+                          type: string
+                          description: Date of time that information on the callback key transaction is no longer available to be queried by the integrator. Callback key transactions expire 60 days after they are originally submitted.
+                          format: date-time
+                        processingStatus:
+                          type: string
+                          description: The processing status of the callback key transaction. This field can be SUBMITTED, PROCESSING, COMPLETE-ERRORS, COMPLETE-NOERRORS, or SYSTEM-FAILURE. Summary level and detail level details cannot be returned for a callback key if its status is still SUBMITTED or PROCESSING. If a transaction is still processing, an error will be returned if an integrator attempts to get summary or detail-level details on the callback key.
+                        active:
+                          type: boolean
+                          description: Indicator field for whether details on the callback key transaction can still be returned based on whether the expiration date is in the future or past. If a transaction is no longer active, an error will be returned if an integrator attempts to get summary or detail-level details on the callback key.
+                  metadata:
+                    type: object
+                    properties:
+                      totalCount:
+                        type: integer
+                        description: The total number of items.
+                      page:
+                        type: integer
+                        description: The current page number.
+                      totalPages:
+                        type: integer
+                        description: The total number of pages.
+                      limit:
+                        type: integer
+                        description: The number of items per page.
+                      offset:
+                        type: integer
+                        description: The offset of the current page.
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Campaign Invalid Parameter:
+                  $ref: '#/components/examples/queryStringInvalidParameter'                
+                Campaign Invalid Sort Value:
+                  $ref: '#/components/examples/queryStringInvalidSortValue'                  
+        default:
+          description: An unanticipated error has occurred.
+      security:
+        - OAuth:
+            - campaigns
+  /campaigns/{CRID}/{callbackKey}/summary:
+    get:
+      tags:
+        - Resources
+      summary: Return summary-level information on a single callback key transaction
+      description: Return summary-level information on a single callback key transaction
+      operationId: get-summary-data
+      parameters:
+        - name: CRID
+          in: path
+          description: The campaign submitter's Customer Registration ID (CRID).
+          required: true
+          style: simple
+          explode: true
+          schema:
+            type: string
+        - name: callbackKey
+          in: path
+          description: The callback key associated with the campaign.
+          required: true
+          style: simple
+          explode: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SummarySuccessResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryErrorResponse'
+              examples:
+                Invalid Callback Key for Submitter CRID:
+                  $ref: '#/components/examples/invalidCallbackKeyforSubmitterCRID'               
+                Expired Callback Key:
+                  $ref: '#/components/examples/callbackKeyExpired'
+                Callback Key Still Processing:
+                  $ref: '#/components/examples/callbackKeyStillProcessing'    
+      security:
+        - OAuth:
+            - campaigns
+  /campaigns/{CRID}/{callbackKey}/detail:
+    get:
+      tags:
+        - Resources
+      summary: Return IMB-level errors for a single callback key transaction
+      description: Return IMB-level errors for a single callback key transaction
+      operationId: get-detail-data
+      parameters:
+        - name: CRID
+          in: path
+          description: The campaign submitter's Customer Registration ID (CRID).
+          required: true
+          schema:
+            type: string
+        - name: callbackKey
+          in: path
+          description: The callback key associated with the campaign.
+          required: true
+          schema:
+            type: string
+        - name: offset
+          in: query
+          description: Number of records to skip before returning results. This field must be either be 0 or be a multiple of the limit variable (e.g., is limit is 10, offset can be 0, 10, 20, etc.). If no offset parameter is included at all, a default of 0 will be used.
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: limit
+          in: query
+          description: Number of results per page. This field must be a number between 1 and 1000. If no limit parameter is included at all, a default of 10 will be used.
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 1000
+        - name: sort
+          in: query
+          description: Sorting order for results. To use this, an integrator can input any column that they would like to sort by (e.g., sort=errorMessage,desc). An integrator can indicate either an ascending or descending order by inputting asc or desc after the field name. If asc or desc is not included, then the field will be sorted ascending by default. If no sort parameter is included at all, the response will be sorted by errorMessage,asc by default.
+          required: false
+          schema:
+            type: string
+        - name: errorMessage
+          in: query
+          description: Filter results by IMB-level error message.
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailSuccessResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryErrorResponse'
+              examples:
+                Invalid Callback Key for Submitter CRID:
+                  $ref: '#/components/examples/invalidCallbackKeyforSubmitterCRID'               
+                Expired Callback Key:
+                  $ref: '#/components/examples/callbackKeyExpired'
+                Callback Key Still Processing:
+                  $ref: '#/components/examples/callbackKeyStillProcessing'
+                Campaign Invalid Parameter:
+                  $ref: '#/components/examples/queryStringInvalidParameter'                
+                Campaign Invalid Sort Value:
+                  $ref: '#/components/examples/queryStringInvalidSortValue'                   
+      security:
+        - OAuth:
+            - campaigns
+components:
+  schemas:
+    Campaign:
+      required:
+        - MID
+        - brandDisplayName
+        - campaignCode
+        - campaignTitle
+        - campaignType
+        - endDate
+        - mailOwnerCRID
+        - mailOwnerName
+        - mailpieceShape
+        - rideAlong
+        - startDate
+        - submitterName
+        - targetUrl
+      type: object
+      properties:
+        campaignID:
+          type: string
+          readOnly: true
+        campaignType:
+          type: string
+          description: |-
+            Identifier on how the campaign should be applied to mail pieces
+             * A01 (Non-Sequential or NON-SEQ): Individual barcodes added to campaign after submission
+             * A02 (Mailer ID or MID): All mailpieces with given Mailer ID added to campaign
+             * A03 (Sequential or SEQ): All mailpieces with given Mailer ID and serial range added to campaign
+             * A04 (Saturation or SAT): Mailpieces will be matched to saturation pieces
+        mailpieceShape:
+          type: string
+          description: |-
+            Identifier on what types of mail pieces the campaign should be applied to
+             * LT (Letter)
+             * CD (Card)
+             * FL (Flat)
+        MID:
+          type: string
+          description: "The Mailer ID for the campaign - this field will be used to match IMBs to MID and SEQ type campaigns. If an IMB has the Mailer ID (MID) associated with an active MID/SEQ campaign, it is eligible to be displayed with the campaign's image and Target URL."
+        submitterName:
+          type: string
+          description: The campaign submitter's Name.
+        submitterCRID:
+          type: string
+          description: The campaign submitter's Customer Registration ID (CRID).
+          readOnly: true
+        mailOwnerCRID:
+          type: string
+          description: Customer Registration ID (CRID) of the Mail Owner associated with the Informed Delivery campaign.
+        mailOwnerName:
+          type: string
+          description: Name of the Mail Owner associated with the Informed Delivery campaign.
+        campaignCode:
+          type: string
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.
+        campaignTitle:
+          type: string
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.
+        brandDisplayName:
+          type: string
+          description: User defined field that is placed on Informed Delivery's UIs when campaign is displayed.
+        startDate:
+          type: string
+          description: First day campaign will be displayed
+          format: date
+        endDate:
+          type: string
+          description: Last day campaign will be displayed
+          format: date
+        startSerial:
+          type: string
+          description: The lower limit of the serial range for SEQ type campaigns. This field is required for SEQ campaigns only and is not allowed for submission for any other campaign types.
+        endSerial:
+          type: string
+          description: The upper limit of the serial range for SEQ type campaigns. This field is required for SEQ campaigns only and is not allowed for submission for any other campaign types.
+        targetUrl:
+          type: string
+          description: The URL that users are redirected to when clicking on the Ridealong image or Learn More link for a campaign. This field is required.
+        campaignSource:
+          type: string
+          description: "Gives information on system that was originally used to create campaign (e.g. API, PO!, MCP, Admin Console). This field will not update if campaign is subsequently edited or cancelled."
+          readOnly: true
+        hasUrlParams:
+          type: boolean
+          description: "An indicator dictating whether a campaign is eligible for MID and Serial Number parameters to be appended to the end of the Target URL for tracking purposes. By default, the MID and Serial Number parameters for a given mailpiece will be added to end of the Target URL that users are taken to upon clicking on a campaign. If a mailer opts out of this feature, then these MID and Serial Number fields will not be appended to the campaign's Target URL."
+        isShareable:
+          type: boolean
+          description: "An indicator dictating whether a campaign is eligible for Social Sharing. By default, mail campaigns will be displayed alongside options to share the campaign to various social media platforms. If a mailer opts out of this feature, then these options will not be displayed with the campaign."
+        postalOneSaturationJobID:
+          type: string
+          description: "A PostalOne! generated unique identifier for a saturation type campaign. This field should not be used for NON-SEQ, MID, or SEQ campaigns."
+        rideAlong:
+          type: string
+          description: "The image that is displayed below the replacement or mailpiece image for mailpieces matched with a mail campaign. When clicked, this image will take users to the Target URL of the campaign. This field is required."
+          format: byte
+        replacementImage:
+          type: string
+          description: "The image that is displayed instead of the mailpiece image for mailpieces matched with a mail campaign. This field is required if the Campaign Shape Type is 'FL', otherwise this field is optional."
+        addBarcode:
+          type: boolean
+          description: Boolean that gives information on whether a campaign is eligible for having individual mailpieces added to it. This flag will be true only if the campaign has a NON-SEQ campaign type and an End Date in the future.
+          readOnly: true
+        barcodeCount:
+          type: number
+          description: Number of mailpieces associated with the campaign. The number will only get greater than 0 for NON-SEQ campaigns.
+          readOnly: true
+        cancel:
+          type: boolean
+          description: Boolean that gives information on whether a campaign is eligible for cancellation. This flag will be true only if the campaign is in an Active status.
+          readOnly: true
+        createdDatetime:
+          type: string
+          description: Timestamp of initial campaign creation. This timestamp will be returned in UTC.
+          readOnly: true
+          format: date-time          
+        delete:
+          type: boolean
+          description: "Boolean that gives information on whether a campaign is eligible for cancellation. This flag will be true only if the campaign is in a Submitted, Draft, or Inactive status."
+          readOnly: true
+        fullEdit:
+          type: boolean
+          description: 'Boolean that gives information on whether a campaign is eligible for edit inclusive of the campaign''s MID. This flag will be true only if the campaign is in a Submitted and is not a NON-SEQ campaign with associated barcodes. '
+          readOnly: true
+        lastModifiedDatetime:
+          type: string
+          description: "Timestamp of last update made to campaign, inclusive of status changes that occur when a campaign activates or completes. This timestamp will be returned in UTC."
+          readOnly: true
+          format: date-time          
+        lastModifiedSource:
+          type: string
+          description: "Gives information on system that was used to make last update to campaign (e.g. API, PO!, MCP, Admin Console). This field will update each time a campaign is created, edited, or cancelled."
+          readOnly: true
+        lastModifiedUsername:
+          type: string
+          description: "Gives information on Cust Reg user name associated with last update to campaign. This field will update each time a campaign is created, edited, or cancelled."
+          readOnly: true
+        limitedEdit:
+          type: boolean
+          description: "Boolean that gives information on whether a campaign is eligible for edit, not inclusive of the campaign's MID. This flag will be true only if the campaign is in a Submitted status, is a NON-SEQ campaign, and already has associated barcodes."
+          readOnly: true
+        noEdit:
+          type: boolean
+          description: "Boolean that gives information on whether a campaign is not eligible for edit. This flag will be true if the campaign has an Active, Complete, Cancelled, or Deleted status."
+          readOnly: true
+        status:
+          type: string
+          description: "Status of campaign - possible values include Submitted, Active, Complete, Inactive, Draft, Cancelled, and Deleted"
+          readOnly: true
+        submittedDatetime:
+          type: string
+          description: Timestamp of initial campaign submission. This timestamp will be returned in UTC.
+          readOnly: true
+          format: date-time          
+      additionalProperties: false
+    CampaignEdit:
+      type: object
+      properties:
+        campaignType:
+          type: string
+          description: |-
+            Identifier on what types of mail pieces the campaign should be applied to
+             * LETTER
+             * CARD
+             * FLAT
+             * PACKAGE          
+        mailpieceShape:
+          type: string
+          description: |-
+            Identifier on what types of mail pieces the campaign should be applied to
+             * LT (Letter)
+             * CD (Card)
+             * FL (Flat)
+        MID:
+          type: string
+          description: "The Mailer ID for the campaign - this field will be used to match IMBs to MID and SEQ type campaigns. If an IMB has the Mailer ID (MID) associated with an active MID/SEQ campaign, it is eligible to be displayed with the campaign's image and Target URL."
+        mailOwnerCRID:
+          type: string
+          description: Customer Registration ID (CRID) of the Mail Owner associated with the Informed Delivery campaign.
+        mailOwnerName:
+          type: string
+          description: Name of the Mail Owner associated with the Informed Delivery campaign.
+        campaignCode:
+          type: string
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.
+        campaignTitle:
+          type: string
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.
+        brandDisplayName:
+          type: string
+          description: User defined field that is placed on Informed Delivery's UIs when campaign is displayed.
+        startDate:
+          type: string
+          description: First day campaign will be displayed
+          format: date
+        endDate:
+          type: string
+          description: Last day campaign will be displayed
+          format: date
+        startSerial:
+          type: string
+          description: The lower limit of the serial range for SEQ type campaigns. This field is required for SEQ campaigns only and is not allowed for submission for any other campaign types.
+        endSerial:
+          type: string
+          description: The upper limit of the serial range for SEQ type campaigns. This field is required for SEQ campaigns only and is not allowed for submission for any other campaign types.
+        targetUrl:
+          type: string
+          description: The URL that users are redirected to when clicking on the Ridealong image or Learn More link for a campaign. This field is required.
+        rideAlong:
+          type: string
+          description: "The image that is displayed below the replacement or mailpiece image for mailpieces matched with a mail campaign. When clicked, this image will take users to the Target URL of the campaign. This field is required."
+        replacementImage:
+          type: string
+          description: "The image that is displayed instead of the mailpiece image for mailpieces matched with a mail campaign. This field is required if the Campaign Shape Type is 'FL', otherwise this field is optional."
+        isShareable:
+          type: boolean
+          description: "An indicator dictating whether a campaign is eligible for Social Sharing. By default, mail campaigns will be displayed alongside options to share the campaign to various social media platforms. If a mailer opts out of this feature, then these options will not be displayed with the campaign."
+        hasUrlParams:
+          type: boolean 
+          description: "An indicator dictating whether a campaign is eligible for MID and Serial Number parameters to be appended to the end of the Target URL for tracking purposes. By default, the MID and Serial Number parameters for a given mailpiece will be added to end of the Target URL that users are taken to upon clicking on a campaign. If a mailer opts out of this feature, then these MID and Serial Number fields will not be appended to the campaign's Target URL."
+    CampaignEditResponse:
+      type: object
+      properties:
+        campaignID:
+          type: string
+          description: Unique identifier for the campaign.          
+        campaignType:
+          type: string
+          description: |-
+            Identifier on how the campaign should be applied to mail pieces
+             * A01 (Non-Sequential or NON-SEQ): Individual barcodes added to campaign after submission
+             * A02 (Mailer ID or MID): All mailpieces with given Mailer ID added to campaign
+             * A03 (Sequential or SEQ): All mailpieces with given Mailer ID and serial range added to campaign
+             * A04 (Saturation or SAT): Mailpieces will be matched to saturation pieces
+        mailpieceShape:
+          type: string
+          description: |-
+            Identifier on what types of mail pieces the campaign should be applied to
+             * LT (Letter)
+             * CD (Card)
+             * FL (Flat)
+        MID:
+          type: string
+          description: "The Mailer ID for the campaign - this field will be used to match IMBs to MID and SEQ type campaigns. If an IMB has the Mailer ID (MID) associated with an active MID/SEQ campaign, it is eligible to be displayed with the campaign's image and Target URL."
+        submitterName:
+          type: string
+          description: The campaign submitter's Name.
+        submitterCRID:
+          type: string
+          description: The campaign submitter's Customer Registration ID (CRID).          
+        mailOwnerCRID:
+          type: string
+          description: Customer Registration ID (CRID) of the Mail Owner associated with the Informed Delivery campaign.          
+        mailOwnerName:
+          type: string
+          description: Name of the Mail Owner associated with the Informed Delivery campaign.          
+        campaignCode:
+          type: string
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.          
+        campaignTitle:
+          type: string
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.
+        brandDisplayName:
+          type: string
+          description: User defined field that is placed on Informed Delivery's UIs when campaign is displayed.
+        startDate:
+          type: string
+          description: First day campaign will be displayed          
+          format: date
+        endDate:
+          type: string
+          description: Last day campaign will be displayed          
+          format: date
+        startSerial:
+          type: string
+          description: The lower limit of the serial range for SEQ type campaigns. This field is required for SEQ campaigns only and is not allowed for submission for any other campaign types.          
+        endSerial:
+          type: string
+          description: The upper limit of the serial range for SEQ type campaigns. This field is required for SEQ campaigns only and is not allowed for submission for any other campaign types.          
+        targetUrl:
+          type: string
+          description: The URL that users are redirected to when clicking on the Ridealong image or Learn More link for a campaign. This field is required.
+        campaignSource:
+          type: string
+          description: "Gives information on system that was originally used to create campaign (e.g. API, PO!, MCP, Admin Console). This field will not update if campaign is subsequently edited or cancelled."
+        postalOneSaturationJobID:
+          type: string
+          description: "A PostalOne! generated unique identifier for a saturation type campaign. This field should not be used for NON-SEQ, MID, or SEQ campaigns."
+        rideAlong:
+          type: string
+          description: "The image that is displayed below the replacement or mailpiece image for mailpieces matched with a mail campaign. When clicked, this image will take users to the Target URL of the campaign. This field is required."          
+        replacementImage:
+          type: string
+          description: "The image that is displayed instead of the mailpiece image for mailpieces matched with a mail campaign. This field is required if the Campaign Shape Type is 'FL', otherwise this field is optional."          
+        addBarcode:
+          type: boolean
+          description: Boolean that gives information on whether a campaign is eligible for having individual mailpieces added to it. This flag will be true only if the campaign has a NON-SEQ campaign type and an End Date in the future.          
+        barcodeCount:
+          type: number
+          description: Number of mailpieces associated with the campaign. The number will only get greater than 0 for NON-SEQ campaigns.          
+        cancel:
+          type: boolean
+          description: Boolean that gives information on whether a campaign is eligible for cancellation. This flag will be true only if the campaign is in an Active status.          
+        createdDatetime:
+          type: string
+          format: date-time
+          description: Timestamp of initial campaign creation. This timestamp will be returned in UTC.  
+        delete:
+          type: boolean
+          description: "Boolean that gives information on whether a campaign is eligible for cancellation. This flag will be true only if the campaign is in a Submitted, Draft, or Inactive status."  
+        fullEdit:
+          type: boolean
+          description: 'Boolean that gives information on whether a campaign is eligible for edit inclusive of the campaign''s MID. This flag will be true only if the campaign is in a Submitted and is not a NON-SEQ campaign with associated barcodes. '          
+        lastModifiedDatetime:
+          type: string
+          format: date-time          
+          description: "Timestamp of last update made to campaign, inclusive of status changes that occur when a campaign activates or completes. This timestamp will be returned in UTC."  
+        lastModifiedSource:
+          type: string
+          description: "Gives information on system that was used to make last update to campaign (e.g. API, PO!, MCP, Admin Console). This field will update each time a campaign is created, edited, or cancelled."          
+        lastModifiedUsername:
+          type: string
+          description: "Gives information on Cust Reg user name associated with last update to campaign. This field will update each time a campaign is created, edited, or cancelled."          
+        limitedEdit:
+          type: boolean
+          description: "Boolean that gives information on whether a campaign is eligible for edit, not inclusive of the campaign's MID. This flag will be true only if the campaign is in a Submitted status, is a NON-SEQ campaign, and already has associated barcodes."          
+        noEdit:
+          type: boolean
+          description: "Boolean that gives information on whether a campaign is not eligible for edit. This flag will be true if the campaign has an Active, Complete, Cancelled, or Deleted status." 
+        status:
+          type: string
+          description: "Status of campaign - possible values include Submitted, Active, Complete, Inactive, Draft, Cancelled, and Deleted"          
+        submittedDatetime:
+          type: string
+          description: Timestamp of initial campaign submission. This timestamp will be returned in UTC.
+          format: date-time          
+        isShareable:
+          type: boolean
+          description: "An indicator dictating whether a campaign is eligible for Social Sharing. By default, mail campaigns will be displayed alongside options to share the campaign to various social media platforms. If a mailer opts out of this feature, then these options will not be displayed with the campaign."          
+        hasUrlParams:
+          type: boolean   
+          description: "An indicator dictating whether a campaign is eligible for MID and Serial Number parameters to be appended to the end of the Target URL for tracking purposes. By default, the MID and Serial Number parameters for a given mailpiece will be added to end of the Target URL that users are taken to upon clicking on a campaign. If a mailer opts out of this feature, then these MID and Serial Number fields will not be appended to the campaign's Target URL."          
+    QueryString:
+      type: object
+      properties:
+        campaigns:
+          type: array
+          items:
+            type: object
+            properties:
+              campaignID:
+                type: string
+                description: Unique identifier for the campaign.                
+              campaignType:
+                type: string
+                description: |-
+                  Identifier on how the campaign should be applied to mail pieces
+                    * A01 (Non-Sequential or NON-SEQ): Individual barcodes added to campaign after submission
+                    * A02 (Mailer ID or MID): All mailpieces with given Mailer ID added to campaign
+                    * A03 (Sequential or SEQ): All mailpieces with given Mailer ID and serial range added to campaign
+                    * A04 (Saturation or SAT): Mailpieces will be matched to saturation pieces      
+              mailpieceShape:
+                type: string
+                description: |-
+                  Identifier on what types of mail pieces the campaign should be applied to
+                  * LT (Letter)
+                  * CD (Card)
+                  * FL (Flat)                 
+              MID:
+                type: string
+                description: "The Mailer ID for the campaign - this field will be used to match IMBs to MID and SEQ type campaigns. If an IMB has the Mailer ID (MID) associated with an active MID/SEQ campaign, it is eligible to be displayed with the campaign's image and Target URL."
+              submitterName:
+                type: string
+                description: The campaign submitter's Name.                
+              submitterCRID:
+                type: string
+                description: The campaign submitter's Customer Registration ID (CRID).
+              mailOwnerCRID:
+                type: string
+                description: Customer Registration ID (CRID) of the Mail Owner associated with the Informed Delivery campaign.                
+              mailOwnerName:
+                type: string
+                description: Name of the Mail Owner associated with the Informed Delivery campaign.     
+              campaignCode:
+                type: string
+                description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.                
+              campaignTitle:
+                type: string
+                description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.                
+              brandDisplayName:
+                type: string
+                description: User defined field that is placed on Informed Delivery's UIs when campaign is displayed.
+              startDate:
+                type: string
+                description: First day campaign will be displayed                
+                format: date
+              endDate:
+                type: string
+                description: Last day campaign will be displayed                
+                format: date
+              startSerial:
+                type: string
+                description: The lower limit of the serial range for SEQ type campaigns. This field is required for SEQ campaigns only and is not allowed for submission for any other campaign types.                
+              endSerial:
+                type: string
+                description: The upper limit of the serial range for SEQ type campaigns. This field is required for SEQ campaigns only and is not allowed for submission for any other campaign types.                
+              campaignSource:
+                type: string
+                description: "Gives information on system that was originally used to create campaign (e.g. API, PO!, MCP, Admin Console). This field will not update if campaign is subsequently edited or cancelled."                
+              postalOneSaturationJobID:
+                type: string
+                description: "A PostalOne! generated unique identifier for a saturation type campaign. This field should not be used for NON-SEQ, MID, or SEQ campaigns."                
+              addBarcode:
+                type: boolean
+                description: Boolean that gives information on whether a campaign is eligible for having individual mailpieces added to it. This flag will be true only if the campaign has a NON-SEQ campaign type and an End Date in the future.                
+              barcodeCount:
+                type: number
+                description: Number of mailpieces associated with the campaign. The number will only get greater than 0 for NON-SEQ campaigns.                
+              cancel:
+                type: boolean
+                description: Boolean that gives information on whether a campaign is eligible for cancellation. This flag will be true only if the campaign is in an Active status.                
+              createdDatetime:
+                type: string
+                description: Timestamp of initial campaign creation. This timestamp will be returned in UTC.
+                format: date-time
+              delete:
+                type: boolean
+                description: "Boolean that gives information on whether a campaign is eligible for cancellation. This flag will be true only if the campaign is in a Submitted, Draft, or Inactive status."                
+              fullEdit:
+                type: boolean
+                description: 'Boolean that gives information on whether a campaign is eligible for edit inclusive of the campaign''s MID. This flag will be true only if the campaign is in a Submitted and is not a NON-SEQ campaign with associated barcodes. '                
+              lastModifiedDatetime:
+                type: string
+                description: "Timestamp of last update made to campaign, inclusive of status changes that occur when a campaign activates or completes. This timestamp will be returned in UTC."      
+                format: date-time
+              lastModifiedSource:
+                type: string
+                description: "Gives information on system that was used to make last update to campaign (e.g. API, PO!, MCP, Admin Console). This field will update each time a campaign is created, edited, or cancelled."                
+              lastModifiedUsername:
+                type: string
+                description: "Gives information on Cust Reg user name associated with last update to campaign. This field will update each time a campaign is created, edited, or cancelled."  
+              limitedEdit:
+                type: boolean
+                description: "Boolean that gives information on whether a campaign is eligible for edit, not inclusive of the campaign's MID. This flag will be true only if the campaign is in a Submitted status, is a NON-SEQ campaign, and already has associated barcodes."  
+              noEdit:
+                type: boolean
+                description: "Boolean that gives information on whether a campaign is not eligible for edit. This flag will be true if the campaign has an Active, Complete, Cancelled, or Deleted status."                
+              status:
+                type: string
+                description: "Status of campaign - possible values include Submitted, Active, Complete, Inactive, Draft, Cancelled, and Deleted"                
+              submittedDatetime:
+                type: string
+                description: Timestamp of initial campaign submission. This timestamp will be returned in UTC.   
+                format: date-time
+              isShareable:
+                type: boolean
+                description: "An indicator dictating whether a campaign is eligible for Social Sharing. By default, mail campaigns will be displayed alongside options to share the campaign to various social media platforms. If a mailer opts out of this feature, then these options will not be displayed with the campaign."                
+              hasUrlParams:
+                type: boolean  
+                description: "An indicator dictating whether a campaign is eligible for MID and Serial Number parameters to be appended to the end of the Target URL for tracking purposes. By default, the MID and Serial Number parameters for a given mailpiece will be added to end of the Target URL that users are taken to upon clicking on a campaign. If a mailer opts out of this feature, then these MID and Serial Number fields will not be appended to the campaign's Target URL."                
+        metadata:
+          type: object
+          properties:
+            totalCount:
+              type: integer
+              description: The total number of items.
+            page:
+              type: integer
+              description: The current page number.
+            totalPages:
+              type: integer
+              description: The total number of pages.
+            limit:
+              type: integer
+              description: The number of items per page.
+            offset:
+              type: integer
+              description: The offset of the current page.
+    ErrorMessage:
+      title: Error
+      type: object
+      required:
+      - apiVersion
+      properties:
+        apiVersion:
+          type: string
+          description: The version of the API that was used and that raised the error.
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: The error status code that has been returned in response to the request.
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    description: A human-readable title that identifies the error.
+                  detail:
+                    type: string
+                    description: A human-readable description of the error that occurred.
+    
+    IMBsRequest:
+      required:
+        - IMBs
+      type: object
+      properties:
+        IMBs:
+          type: string
+          description: List of IMBs to be added to NON-SEQ campaign via request
+    
+    IMBsResponseLessThan25Success:
+      title: IMBsResponseLessThan25Success
+      type: object
+      properties:
+        IMBs:
+          type: array
+          items:
+            type: object
+            properties:
+              IMB:
+                type: string
+                description: The IMB successfully added to the campaign.
+              pieceID:
+                type: integer
+                description: The unique pieceID of the IMB for the campaign. This pieceID will be unique if an IMB is added to multiple campaigns.
+                example: 2300001
+    
+    IMBsResponseMoreThan25Success:
+      title: IMBsResponseMoreThan25Success
+      type: object
+      properties:
+        callbackKey:
+          type: string
+          description: The callback key generated by Informed Delivery for a successful request with more than 25 IMBs. This can be used in subsequent requests against the callback key endpoints to get more information on the successes and errors for individual IMBs in the request.  
+        status:
+          type: string
+          description: Status message giving user more information on the request.
+          example: Your API request was received and is being processed.    
+    IMBsPartialSuccess:
+      title: IMBsPartialSuccess
+      type: object
+      properties:
+        IMBs:
+          type: array
+          items:
+            type: object
+            properties:
+              IMB:
+                type: string
+                description: The IMB included in the request.
+              pieceID:
+                type: integer
+                description: The unique pieceID of the IMB for the campaign. This pieceID will be unique if an IMB is added to multiple campaigns.
+                nullable: true                
+                example: 2300001                
+              errors:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                      description: Title of error.
+                    detail:
+                      type: string
+                      description: Details of error.
+                    
+    IMBsErrorMessage:
+      title: IMBsErrorMessage
+      type: object
+      required:
+        - IMBs
+      properties:
+        IMBs:
+          type: array
+          items:
+            type: object
+            properties:
+              IMB:
+                type: string
+                description: The IMB included in the request.
+              pieceID:
+                type: integer
+                description: The unique pieceID of the IMB for the campaign. This pieceID will be unique if an IMB is added to multiple campaigns.
+                nullable: true                
+                example: 12341521                    
+              errors:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                      description: Title of IMB-level error associated with the request. If there is an IMB-level error, that IMB will not be added to the campaign.
+                    detail:
+                      type: string
+                      description: Details on IMB-level error associated with the request. If there is an IMB-level error, that IMB will not be added to the campaign.
+    SummarySuccessResponse:
+      title: SummarySuccessResponse
+      type: object
+      properties:
+        campaignID:
+          type: string
+          description: Unique identifier for the campaign.
+        totalBarcodes:
+          type: number
+          description: The total number of barcodes in the callback key transaction.
+        totalBarcodesAdded:
+          type: number
+          description: The total number of barcodes successfully added to the campaign via the callback key transaction.
+        totalBarcodesFailed:
+          type: number
+          description: The total number of barcodes that failed to be added to the campaign via the callback key transaction.
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              detail:
+                type: string
+                description: Details of the error.
+              quantity:
+                type: number
+                description: Quantity of items affected by the error.
+    DetailSuccessResponse:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              IMB:
+                type: string
+                description: The IMB associated with the error.
+              title:
+                type: string
+                description: Title of the error.
+              detail:
+                type: string
+                description: Detailed description of the error.
+        metadata:
+          type: object
+          properties:
+            totalCount:
+              type: integer
+              description: The total number of items.
+            page:
+              type: integer
+              description: The current page number.
+            totalPages:
+              type: integer
+              description: The total number of pages.
+            limit:
+              type: integer
+              description: The number of items per page.
+            offset:
+              type: integer
+              description: The offset of the current page.
+    QueryErrorResponse:
+      type: object
+      properties:
+        apiVersion:
+          type: string
+          description: The version of the API that raised the error.
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: The error status code.
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    description: A title identifying the error.
+                  detail:
+                    type: string
+                    description: A description of the error.
+  parameters:
+    CampaignId:
+      name: campaignId
+      in: path
+      description: "Unique identifier for an Informed Delivery campaign, generated internally by Informed Delivery and returned for successfully created campaigns."
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+  examples:
+    campaignDuplicate:
+      summary: Duplicate Campaign Error
+      description: Duplicate Campaign Error
+      value:
+        apiVersion: "1.0"
+        error:
+          code: "400"
+          errors:
+            - title: CampaignCode.NotUniquetoMID
+              detail: Campaign Code not unique for Campaign MID. Use a unique Campaign Code.
+    campaignMIDSerialOverlap:
+      summary: Campaign MID serials overlap
+      description: Campaign MID serials overlap
+      value:
+        apiVersion: "1.0"
+        error:
+          code: "400"
+          errors:
+            - title: CampaignMID.SerialOverlap
+              detail: Campaign serials overlap with another campaign for this MID and date range.
+    campaignMIDOverlap:
+      summary: Campaign overlaps with another
+      description: Campaign overlaps with another
+      value:
+        apiVersion: "1.0"
+        error:
+          code: "400"
+          errors:
+            - title: CampaignMID.Overlap
+              detail: Campaign overlaps with another campaign for this MID and date range.
+    campaignCancelInvalid:
+      summary: Campaign is in Cancelled Status
+      description: Campaign is in Cancelled Status
+      value:
+        apiVersion: "1.0"
+        error:
+          code: "400"
+          errors:
+            - title: Campaign.CancelInvalid
+              detail: "Campaigns in Cancelled, Deleted, Submitted, Draft, Inactive, or Complete status cannot be cancelled."
+    campaignIDDeleteInvalid:
+      summary: Campaign is in Deleted Status
+      description: Campaign is in Deleted Status
+      value:
+        apiVersion: "1.0"
+        error:
+          code: "400"
+          errors:
+            - title: CampaignID.DeleteInvalid
+              detail: "  Campaigns in Cancelled, Deleted, Active, or Complete status cannot be deleted."
+    queryStringInvalidParameter:
+      summary: Invalid Parameter Name
+      description: Invalid Parameter name
+      value:
+        apiVersion: "1.0"
+        error:
+          code: "400"
+          errors:
+            - title: QueryString.InvalidParameter
+              detail: "campaignGroupingCode is an invalid parameter name."
+    queryStringInvalidSortValue:
+      summary: Invalid Sort Value
+      description: Invalid Sort Value
+      value:
+        apiVersion: "1.0"
+        error:
+          code: "400"
+          errors:
+            - title: QueryString.InvalidSortValue
+              detail: "Invalid value provided for the sort parameter(s) in the query string."
+    invalidCampaignIDforSubmitterCRID:
+      summary: Invalid Campaign ID for Submitter CRID
+      description: Invalid Campaign ID for Submitter CRID
+      value:
+        apiVersion: "1.0"
+        error:
+          code: "400"
+          errors:
+            - title: PathVariableCampaignID.Invalid
+              detail: "Campaign ID not valid for submitter CRID."  
+    CampaignNotEligibleForAddingIMbs:
+      summary: Campaign Not Eligible For Adding IMBs
+      description: Campaign Not Eligible For Adding IMBs
+      value:
+        apiVersion: "1.0"
+        error:
+          code: "400"
+          errors:
+            - title: Campaign.AddBarcodeInvalid
+              detail: "Barcodes cannot be added to this campaign. For a campaign to be eligible for adding barcodes, it must be a NON-SEQ campaign in a Submitted or Active status with an End Date in the future."           
+    IMBInCampaign:
+      summary: IMB Already In Campaign
+      description: IMB Already In Campaign
+      value:
+        IMBs:
+            - IMB: "0027129806626075690370630330150"
+              pieceID: null
+              errors:
+                - title: Barcode.InCampaign
+                  detail: Barcode is already associated with this campaign.
+    IMBInvalidFormat:
+      summary: IMB Invalid Format
+      description: IMB Invalid Format
+      value:
+        IMBs:
+            - IMB: "00271298066260756903706130330150"
+              pieceID: null
+              errors:
+                - title: Barcode.InvalidFieldLength
+                  detail: Barcode must be 31 digits for an Informed Delivery campaign.                  
+    IMBsPartialSuccess:
+      summary: IMB Partial Success
+      description: IMB Partial Success
+      value:
+        IMBs:
+            - IMB: "0027129806626075690370630330144"
+              pieceID: 2300001
+            - IMB: "0027129806626075690370630330150"
+              pieceID: null
+              errors:
+                - title: Barcode.InCampaign
+                  detail: Barcode is already associated with this campaign.                  
+  
+    callbackKeyExpired:
+      summary: Expired Callback Key
+      description: Expired Callback Key
+      value:
+        apiVersion: "1.0"
+        error:
+          code: "400"
+          errors:
+            - title: PathVariableCallbackKey.Expired
+              detail: "Callback Keys are only valid for 60 days past the barcode request submission date."
+    invalidCallbackKeyforSubmitterCRID:
+      summary: Invalid Callback Key for Submitter CRID
+      description: Invalid Callback Key for Submitter CRID
+      value:
+        apiVersion: "1.0"
+        error:
+          code: "400"
+          errors:
+            - title: PathVariableCallbackKey.Invalid
+              detail: "Callback Key not valid for Submitter CRID." 
+    callbackKeyStillProcessing:
+      summary: Callback Key transaction still processing
+      description: Callback Key transaction still processing
+      value:
+        apiVersion: "1.0"
+        error:
+          code: "400"
+          errors:
+            - title: PathVariableCallbackKey.NotProcessed
+              detail: "Your request has been received and is still processing. Try again later."  
+  headers:
+    RetryAfter:
+      description: Indicate to the client application a time after which they can retry a resource request.
+      required: false
+      style: simple
+      explode: false
+      schema:
+        type: string
+        example: "Retry-After: 30"
+    WWWAuthenticate:
+      description: Hint to the client application which security scheme to authorize a resource request.
+      required: false
+      style: simple
+      explode: false
+      schema:
+        type: string
+        example: "WWW-Authenticate: Bearer realm=\"https://api.usps.com\""
+  securitySchemes:
+    OAuth:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /oauth2/token
+          scopes:
+            campaigns: read/write access to all campaigns endpoints

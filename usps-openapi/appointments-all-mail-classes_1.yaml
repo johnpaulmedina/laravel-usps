@@ -1,0 +1,2465 @@
+openapi: 3.0.0
+info:
+  title: Appointments - All Mail Classes
+  description: |
+    Contact Us: [USPS API Support](https://emailus.usps.com/s/usps-APIs) | [Terms of Service](https://about.usps.com/termsofuse.htm)
+
+    These APIs allow users to check for available appointment slots at USPS facilities and create and manage their drop-off and pick-up appointments.
+  version: 3.0.3
+    
+servers:
+  - url: https://apis.usps.com/fast-appointments/v3
+    description: Production Environment Endpoint
+
+paths:
+
+  /fast-appointments/appointment:
+    post:
+      tags:
+        - Resources
+      summary: Create an appointment
+      description: |
+        Create Appointment Request provides the ability to create an appointment.
+      operationId: post-fast-appointment
+      requestBody:
+        description: |
+          The input parameters corresponding to the supported grant types.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentFull'
+            examples:
+              ExampleAppointmentRequest:
+                $ref: '#/components/examples/exampleAppointmentFullRequest'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/AppointmentFull'     
+      responses:
+        '201':
+          description: Resource created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentFull'
+              examples:
+                ExampleAppointmentResponse:
+                  $ref: '#/components/examples/exampleAppointmentFullResponse'                
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/AppointmentFull'
+
+        '400':
+          description: Bad Request.  There is an error in the received request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+        '401':
+          description: Unauthorized request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            
+          headers:
+            WWW-Authenticate:
+              $ref: '#/components/headers/WWWAuthenticate'
+        '403':
+          description: Access is denied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '429':
+          description: Too Many Requests. Too many requests have been received from client in a short amount of time.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+        '503':
+          description: Service is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        default:
+          description: Other unanticipated errors that may occur.
+          content: {}
+      security:
+        - OAuth:
+            - fast-appointments
+
+    put:
+      tags:
+        - Resources
+      summary: Update an appointment
+      description: |
+        Update Appointment Request provides the ability to update an appointment.
+      operationId: put-fast-appointment
+      requestBody:
+        description: |
+          The input parameters corresponding to the supported grant types.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentFull'
+            examples:
+              ExampleUpdateRequest:
+                $ref: '#/components/examples/exampleUpdateAppointmentFullRequest'  
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/AppointmentFull'     
+      responses:
+        '201':
+          description: Resource created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentFull'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/AppointmentFull'
+        '400':
+          description: Bad Request.  There is an error in the received request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+        '401':
+          description: Unauthorized request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            
+          headers:
+            WWW-Authenticate:
+              $ref: '#/components/headers/WWWAuthenticate'
+        '403':
+          description: Access is denied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '429':
+          description: Too Many Requests. Too many requests have been received from client in a short amount of time.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+        '503':
+          description: Service is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        default:
+          description: Other unanticipated errors that may occur.
+          content: {}
+      security:
+        - OAuth:
+            - fast-appointments
+
+    delete:
+      tags:
+        - Resources
+      summary: Cancel an appointment
+      description: |
+        Cancel Appointment Request provides the ability to cancel an appointment.
+      operationId: delete-fast-appointment
+      requestBody:
+        description: |
+          The input parameters corresponding to the supported grant types.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancellationRequest'
+            examples: 
+              exampleCancellationRequest:
+                $ref: '#/components/examples/exampleCancellationRequest' 
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/CancellationRequest'    
+      responses:
+        '200':
+          description: Resource deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancellationResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/CancellationResponse'
+        '400':
+          description: Bad Request.  There is an error in the received request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+        '401':
+          description: Unauthorized request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            
+          headers:
+            WWW-Authenticate:
+              $ref: '#/components/headers/WWWAuthenticate'
+        '403':
+          description: Access is denied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '429':
+          description: Too Many Requests. Too many requests have been received from client in a short amount of time.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+        '503':
+          description: Service is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        default:
+          description: Other unanticipated errors that may occur.
+          content: {}
+      security:
+        - OAuth:
+            - fast-appointments
+
+  /appointment-availability:
+    post:
+      tags:
+        - Resources
+      summary: Request to find available appointment times
+      description: |
+        Allows customers to check for appointment slots at the requested facility.
+      operationId: get-appointment-availability
+      requestBody:
+        description: |
+          The input parameters corresponding to the supported grant types.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SlotAvailability'
+            examples:
+              SlotAvailabilityExample:
+                $ref: '#/components/examples/exampleSlotAvailability'  
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/SlotAvailability'   
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Slots'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Slots'
+        '400':
+          description: Bad Request.  There is an error in the received request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+        '401':
+          description: Unauthorized request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            
+          headers:
+            WWW-Authenticate:
+              $ref: '#/components/headers/WWWAuthenticate'
+        '403':
+          description: Access is denied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '429':
+          description: Too Many Requests. Too many requests have been received from client in a short amount of time.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+        '503':
+          description: Service is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        default:
+          description: Other unanticipated errors that may occur.
+          content: {}
+      security:
+        - OAuth:
+            - fast-appointments
+components:
+  headers:
+    mailClass:
+      description: The mail class used for the search
+      schema:
+        type: string
+        example: "PACKAGE_SERVICES"
+    dropshipKey:
+      description: The dropshipKey used for the search 
+      schema:
+        type: string
+        example: "WV19652"
+    appointmentType:
+      description: The appointmentType used for the search
+      schema:
+        type: string
+        example: "PALLET"
+    appointmentStartDate:
+      description: The appointmentStartDate used for the search
+      schema:
+        type: string
+        format: date
+        example : "2024-01-09"
+    appointmentEndDate:
+      description: The appointmentEndDate used for the search
+      schema:
+        type: string
+        format: date
+        example : "2024-01-09"
+    WWWAuthenticate:
+      description: Hint to the client application which security scheme to authorize a resource request.
+      required: false
+      schema:
+        type: string
+        example: "WWW-Authenticate: Bearer realm=\"https://api.usps.com\""
+    RetryAfter:
+      description: Indicate to the client application a time after which they can retry a resource request.
+      required: false
+      schema:
+        type: string
+        example: "Retry-After: 30"
+  schemas:
+    AppointmentFull:
+      title: Appointment
+      description: Appointment with full details.
+      type: object
+      required:
+        - CRID
+        - shipperAppointmentRequestID
+        - destinationEntry
+        - consigneeFacility
+        - detailInfo
+      xml:
+        wrapped: true
+      properties:
+        appointmentType:
+          description: | 
+            The type of appointment. PALLET = 1, BEDLOAD = 2, DROP_AND_PICK = 3, SPEEDLINE = 4.
+
+            Required for Dropship appointments.
+          type: string
+          enum:
+            - PALLET
+            - BEDLOAD
+            - DROP_AND_PICK
+            - SPEEDLINE        
+        destinationEntry:
+          description: Dropship is YES. Origin Entry is NO.
+          type: string
+          enum:
+            - "YES"
+            - "NO"
+        recurringAppointment:
+            description:  Must have either oneTimeAppointment or recurringAppointment
+            type: object
+            properties:
+                effectiveStartDate:
+                  description: Start date of appointment.
+                    Required for Create actions.
+                  type: string
+                  format: date
+                  example: "2023-10-29"
+                effectiveEndDate:
+                  description: End date of appointment.
+                    Required for Create actions.
+                  type: string
+                  format: date
+                  example: "2023-10-30"
+                appointmentTime:
+                  description: Time of appointment in Local Time.
+                    Required for Create actions.
+                  type: string
+                  format: time
+                  example: "13:00:00"
+                dayFrequencyArray:
+                  type: array
+                  description: Day of the week for the appointment.  Required for Create actions.
+                  items:
+                    type: string
+                    enum:
+                        - DAILY
+                        - SATURDAY
+                        - SUNDAY
+                        - MONDAY
+                        - TUESDAY
+                        - WEDNESDAY
+                        - THURSDAY
+                        - FRIDAY
+                weekFrequencyArray:
+                  type: array
+                  description:  Week of the month for the appointment.  Required for Create actions.
+                  items:
+                    type: string
+                    enum:
+                        - WEEKLY
+                        - BI_WEEKLY
+                        - FIRST
+                        - SECOND
+                        - THIRD
+                        - FOURTH
+                        - FIFTH
+                        - SIXTH
+        oneTimeAppointment:
+            description:  Must have either oneTimeAppointment or recurringAppointment
+            type: object
+            properties:
+                preferredAppointment:
+                  description: Preferred appointment date and time in ISO 8601 format.
+                    Required for Create actions.
+                  type: string
+                  format: date-time
+                  example: "2023-10-30T18:00:00Z"
+                optionalAppointment:
+                  description: Details of the optional appointment start and end time.
+                  type: object
+                  properties:
+                    optionalAppointmentStart:
+                      description: Optional appointment start date and time in ISO 8601 format
+                      type: string
+                      format: date-time
+                      example: "2023-10-30T18:00:00Z"
+                    optionalAppointmentEnd:
+                      description: Optional appointment end date and time in ISO 8601 format
+                      type: string
+                      format: date-time
+                      example: "2023-10-30T18:00:00Z"
+        detailInfo:
+            description: Details of the appointment request.
+            type: object
+            properties:
+                uspsSummary:
+                    type: array
+                    description: Additional details of the Appointment. 
+                    items:
+                        type: object
+                        properties:
+                            destinationDiscountIndicator:
+                                description: Indicator whether this is dropship (NO) or origin entry (YES) appointment.
+                                    Required for Create actions.
+                                type: string
+                                enum:
+                                    - "YES"
+                                    - "NO"
+                            zoneSkippingIndicator:
+                              description: Zone Skip in the Content of the appointment.
+                                    Required for Create actions.
+                              type: string
+                              enum:
+                                - "YES"
+                                - "NO"
+                            fullServiceIndicator:
+                              description: Indicate content is full service
+                              type: string
+                              enum:
+                                - "YES"
+                                - "NO"
+                            eInductionIndicator:
+                              description: Yes/No indicator representing if IMCB is part of an eInduction Content
+                              type: string
+                              enum:
+                                - "YES"
+                                - "NO"
+                            pallets:
+                                type: array
+                                description: Details and properties of the pallets for the appointment.
+                                items:
+                                      type: object
+                                      properties:
+                                        palletPreSortLevel:
+                                          description:  Required for Create actions.
+                                          type: array
+                                          items:
+                                            type: object
+                                            properties:
+                                              uspsContainerInfo:
+                                                description: Details of the container and its contents.
+                                                type: object
+                                                properties:
+                                                  mailOwnerCRID:
+                                                    description: Array of CRIDs of the mail owner. Maximum of 5 values in the array.
+                                                    type: array
+                                                    items:
+                                                        type: string
+                                                        minLength: 1
+                                                        maxLength: 15
+                                                        example: "13236"
+                                                  mailOwnerID:
+                                                    description: Array of IDs of the mail owner. Maximum of 5 values in the array.
+                                                    type: array
+                                                    items:
+                                                        type: string
+                                                        minLength: 1
+                                                        maxLength: 12
+                                                        example: "13236"
+                                                  uspsPublicationID:
+                                                    description: ID of publication (Periodicals) associated with appointment content
+                                                    type: array
+                                                    items:
+                                                        type: string
+                                                        minLength: 1
+                                                        maxLength: 9
+                                                        example: "13236"
+                                                  actualPieceCount:
+                                                    description: Total count of the mail pieces
+                                                    type: integer
+                                                    minimum: 0
+                                                    maximum: 999999999
+                                                    example: 0
+                                                  containerWeight:
+                                                    description: Weight of the container
+                                                    type: string
+                                                    minLength: 1
+                                                    maxLength: 9
+                                                    example: "2204.6"
+                                                  IMCB:
+                                                    description: Array of Intelligent Mail Container Barcode.  Unlimited values allowed.
+                                                                    Required for Create actions.
+                                                    type: array
+                                                    items:
+                                                        type: string
+                                                        minLength: 21
+                                                        maxLength: 24
+                                                        example: "99M123456-----ABC1234"
+                                                  IMCBInfo:
+                                                    description: Is the IMCB Linked or Scanned
+                                                    type: string
+                                                    enum:
+                                                      - LINKED
+                                                      - SCANNED
+                                                  siblingBarcode:
+                                                    description: Array of unique IMCB barcode associated to IMCB barcode.  Unlimited values allowed.
+                                                    type: array
+                                                    items:
+                                                        type: string
+                                                        minLength: 21
+                                                        maxLength: 24
+                                                        example: "99M123456-----ABC1234"
+                                                  postInductionStatus:
+                                                    description: Status as of induction of FAST appointment
+                                                    type: string
+                                                    enum:
+                                                      - ACCEPTED
+                                                      - ON_HOLD
+                                                      - REJECTED
+                                                      - NOT_PAID
+                                                      - TRANSPORTATION_INFO_UPDATED
+                                                      - DISPATCHED_FOR_INDUCTION
+                                                      - DISPATCHED_FOR_PICKUP
+                                                      - PICKED_UP
+                                                      - WAREHOUSED
+                                                      - PLANNED
+                                                      - DOCKED
+                                                      - MAIL_READY_FOR_PICKUP
+                                                      - DELIVERED
+                                                      - DEPOSITED_WITH_SHIPPER
+                                                      - EDOC_SUBMITTED
+                                                      - MAIL_READY_TO_BE_SHIPPED
+                                                      - POSTAGE_FINALIZED
+                                                      - MAIL_VERIFIED_AND_RELEASED
+                                                      - MAIL_IN_COPAL_POOL
+                                                  containerDestination3digitZIP:
+                                                    description: 3 digit zipcode of the destination
+                                                    type: string
+                                                    minLength: 3
+                                                    maxLength: 3
+                                                    pattern: ^\d{3}$
+                                                    example: "275"
+                                                  containerDestination5digitZIP:
+                                                    description: 5 digit zipcode of the destination
+                                                    type: string
+                                                    minLength: 5
+                                                    maxLength: 5
+                                                    pattern: ^\d{5}$
+                                                    example: "27530"
+                                              containerLevel:
+                                                 $ref: '#/components/schemas/ContainerLevel'
+                                              count:
+                                                description: Count for the palletPreSortLevel.
+                                                    Required for Create actions.
+                                                type: integer
+                                                minimum: 0
+                                                maximum: 999999
+                                                example: 5
+                                        count:
+                                          description: Count for pallets.
+                                            Required for Create actions. (One of pallets, sacks, trays count)
+                                          type: integer
+                                          minimum: 0
+                                          maximum: 999999
+                                          example: 5
+                                        handlingUnitType:
+                                          description: Types of containers used in appointment.
+                                            Required for Create actions.
+                                          type: string
+                                          enum:
+                                            - AIRBOX
+                                            - SACKS
+                                            - BUNDLES
+                                            - MIXED_LENGTH_TRAYS
+                                            - 1FT_TRAY
+                                            - 2FT_TRAY
+                                            - EMM_TRAY
+                                            - FLAT_TUB
+                                            - PARCELS
+                                        palletType:
+                                          description: Pallet type used to house handing units.
+                                            Required for Create actions.
+                                          type: string
+                                          enum:
+                                            - AIRBOX
+                                            - PALLET
+                                            - EIRS_61
+                                            - EIRS_61P
+                                            - EIRS_66
+                                            - EIRS_68
+                                            - EIRS_84
+                                            - EIRS_84C
+                            bedload:
+                                type: object
+                                description: Details and properties of the bedload for the appointment.
+                                properties:
+                                    uspsContainerInfo:
+                                        description: Details of the container and its contents.
+                                        type: object
+                                        properties:
+                                          mailOwnerCRID:
+                                            description: Array of CRIDs of the mail owner
+                                            type: array
+                                            items:
+                                                type: string
+                                                minLength: 2
+                                                maxLength: 15
+                                                example: "13236"
+                                          mailOwnerID:
+                                            description: ID of the mail owner
+                                            type: array
+                                            items:
+                                                type: string
+                                                minLength: 1
+                                                maxLength: 12
+                                                example: "13236"
+                                          uspsPublicationID:
+                                            description: The Publication ID
+                                            type: array
+                                            items:
+                                                type: string
+                                                minLength: 1
+                                                maxLength: 9
+                                                example: "13236"
+                                          actualPieceCount:
+                                            description: Total count
+                                            type: integer
+                                            minimum: 0
+                                            maximum: 999999999
+                                            example: 0
+                                          containerWeight:
+                                            description: Weight of the container
+                                            type: string
+                                            minLength: 1
+                                            maxLength: 9
+                                            example: "2204.6"
+                                          IMCB:
+                                            description: Array of Intelligent Mail Container Barcodes
+                                                            Required for Create actions.
+                                            type: array
+                                            items:
+                                                type: string
+                                                minLength: 21
+                                                maxLength: 24
+                                                example: "99M123456-----ABC1234"
+                                          IMCBInfo:
+                                            description: Is the IMCB linked or scanned
+                                            type: string
+                                            enum:
+                                              - LINKED
+                                              - SCANNED
+                                          siblingBarcode:
+                                            description: Array of unique IMCB barcode associated to IMCB barcode
+                                            type: array
+                                            items:
+                                                type: string
+                                                minLength: 21
+                                                maxLength: 24
+                                                example: "99M123456-----ABC1234"
+                                    sacks:
+                                      description:  Array for the sacks portion of the appointment
+                                      type: array
+                                      items:
+                                        type: object
+                                        properties:
+                                          preSortLevel:
+                                            description:  Array for the preSortLevel objects
+                                            type: array
+                                            items:
+                                                description:  Object for the preSortLevel elements
+                                                type: object
+                                                properties:
+                                                  containerLevel:
+                                                    $ref: '#/components/schemas/ContainerLevel'
+                                                  count:
+                                                    description: Count for preSortLevel.
+                                                    type: integer
+                                                    minimum: 0
+                                                    maximum: 999999
+                                                    example: 5
+                                          IMPB:
+                                            description: Intelligent Mail Package Barcode
+                                            type: string
+                                            minLength: 21
+                                            maxLength: 24
+                                            example: "99M123456-----ABC1234"
+                                          count:
+                                            description: Count for sacks.
+                                                Required for Create actions. (One of pallets, sacks, trays count)
+                                            type: integer
+                                            minimum: 0
+                                            maximum: 999999
+                                            example: 5
+                                    trays:
+                                      description: Details and properties of the trays for the appointment.
+                                      type: array
+                                      items:
+                                        type: object
+                                        properties:
+                                          preSortLevel:
+                                            description:  Array for the preSortLevel objects
+                                            type: array
+                                            items:
+                                                description:  Object for the preSortLevel elements
+                                                type: object
+                                                properties:
+                                                  containerLevel:
+                                                    $ref: '#/components/schemas/ContainerLevel'
+                                                  count:
+                                                    description: Count for preSortLevel.
+                                                        Required for Create actions.
+                                                    type: integer
+                                                    minimum: 0
+                                                    maximum: 999999
+                                                    example: 5
+                                          IMTB:
+                                            description: Intelligent Mail Tray Barcode
+                                            type: string
+                                            minLength: 24
+                                            maxLength: 24
+                                            example: "99M123456--------ABC1234"
+                                          count:
+                                            description: Count for trays.
+                                                Required for Create actions. (One of pallets, sacks, trays count)
+                                            type: integer
+                                            minimum: 0
+                                            maximum: 999999
+                                            example: 5
+                                          type:
+                                            description: Tray unit types
+                                            type: string
+                                            enum:
+                                              - MIXED_LENGTH_TRAYS
+                                              - 1FT_TRAY
+                                              - 2FT_TRAY
+                                              - EMM_TRAY
+                                              - FLAT_TUB
+                                    parcels:
+                                      description: Details and properties of the parcels for the appointment.
+                                      type: array
+                                      items:
+                                        type: object
+                                        properties:
+                                          preSortLevel:
+                                            description:  Array for the preSortLevel objects
+                                            type: array
+                                            items:
+                                                description:  Object for the preSortLevel elements
+                                                type: object
+                                                properties:
+                                                  containerLevel:
+                                                    $ref: '#/components/schemas/ContainerLevel'
+                                                  count:
+                                                    description: Count for preSortLevel
+                                                    type: integer
+                                                    minimum: 0
+                                                    maximum: 999999
+                                                    example: 5
+                                          count:
+                                            description: Count for parcels
+                                            type: integer
+                                            minimum: 0
+                                            maximum: 999999
+                                            example: 5
+                                    bundles:
+                                      description: Details and properties of the bundles for the appointment.
+                                      type: array
+                                      items:
+                                        type: object
+                                        properties:
+                                          preSortLevel:
+                                            description:  Array for the preSortLevel objects
+                                            type: array
+                                            items:
+                                                description:  Object for the preSortLevel elements
+                                                type: object
+                                                properties:
+                                                  containerLevel:
+                                                    $ref: '#/components/schemas/ContainerLevel'
+                                                  count:
+                                                    description: Count for preSortLevel
+                                                    type: integer
+                                                    minimum: 0
+                                                    maximum: 999999
+                                                    example: 5
+                                          count:
+                                            description: Count for bundles
+                                            type: integer
+                                            minimum: 0
+                                            maximum: 999999
+                                            example: 5
+                            perishable:
+                              description: Is it perishable.
+                                Required for Create actions. 
+                              type: string
+                              enum: 
+                                - "YES"
+                                - "NO"
+                            mailClass:
+                              description:  
+                                Required for Create actions.|
+                      
+                                Numbers represent the mailClass within legacy systems for understanding
+                        
+                                1 FIRST CLASS MAIL
+                                2 PERIODICALS
+                                3 USPS MARKETING MAIL (PREVIOUSLY STANDARD MAIL)
+                                4 PACKAGE SERVICES
+                                6 PARCEL SELECT
+                                7 PRIORITY MAIL
+                              type: string
+                              enum: 
+                                - FIRST_CLASS
+                                - PERIODICALS
+                                - USPS_MARKETING_MAIL
+                                - PACKAGE_SERVICES
+                                - PARCEL_SELECT
+                                - PRIORITY_MAIL
+                                - USPS_GROUND_ADVANTAGE
+                            rateType:
+                              description: Rate type describes mail class and mail shape combination
+                              type: string
+                              enum: 
+                                - R
+                                - L
+                                - B
+                                - C
+                                - S
+                                - S1
+                                - S2
+                                - S3
+                                - S4
+                                - S5
+                                - S6
+                                - S7
+                                - F
+                                - A
+                                - N
+                                - P
+                                - T
+                                - D
+                                - X
+                                - H
+                                - M
+                                - Z
+                                - E
+                                - E4
+                                - G
+                                - "1"
+                                - "2"
+                                - "3"
+                                - "4"
+                                - J
+                                - K
+                                - V
+                                - W
+                                - Y
+                                - Q
+                            inHomeStart:
+                              description: Start Date of Appointment in Home DELIVERY
+                              type: string
+                              format: date-time
+                              example: "2023-10-30T18:00:00Z"
+                            inHomeEnd:
+                              description: End Date of Appointment in Home DELIVERY
+                              type: string
+                              format: date-time
+                              example: "2023-10-30T18:00:00Z"
+                            processingCategory:
+                              description: Mail shape category.
+                                Required for Create actions.
+                              type: string
+                              enum: 
+                                - LT
+                                - FL
+                                - CD
+                                - OS
+                                - MP
+                                - IR
+                                - PF
+                                - CM
+                                - SP
+                                - MB
+                            newsIndicator:
+                              description: Indicator for Newspaper.
+                                Required for Create actions.
+                              type: string
+                              enum: 
+                                - "YES"
+                                - "NO"
+                            priorityMailIndicator:
+                              description: Priority Mail Indicator.
+                                Required for Create actions.
+                              type: string
+                              enum: 
+                                - "YES"
+                                - "NO"
+                            verificationLocation:
+                              description: Verified Location for BMEU or DMU for FAST appointment
+                              type: string
+                              enum: 
+                                - BMEU
+                                - DMU
+                            mailContentName:
+                              description: Shipper assigned name to content
+                              type: string
+                              minLength: 1
+                              maxLength: 30
+                              example: "Shipment of widgets"
+                            mailPreparerID:
+                              description: The unique ID of the mail preparer
+                              type: string
+                              minLength: 1
+                              maxLength: 12
+                              example: "123456789"
+                            mailPreparerCRID:
+                              description: CRID of the mail preparer
+                              type: string
+                              minLength: 2
+                              maxLength: 15
+                              example: "987654321"
+                            schedulerContentID:
+                              description: The unique ID of the Scheduler
+                              type: string
+                              minLength: 1
+                              maxLength: 12
+                              example: "789456123"
+                            consigneeContentID:
+                              description: Consignee Content ID for this USPSSummary object
+                              type: string
+                              minLength: 1
+                              maxLength: 12
+                              example: "654987321"
+                consigneeContentID:
+                  description: Consignee Content ID to stand in for above USPSSummary object
+                  type: string
+                  minLength: 1
+                  maxLength: 12
+                  example: "789456123"
+        trailerInfo:
+          description: Information about the trailer for the appointment.
+          type: object
+          properties:
+              trailer:
+                description: max of two objects in the array
+                type: array
+                items:
+                  type: object
+                  properties:
+                    trailerNumber:
+                      description: Trailer Identifier
+                      type: string
+                      minLength: 1
+                      maxLength: 12
+                      example: "5050"
+                    trailerLength:
+                      description: Length of the trailer
+                      type: string
+                      enum:
+                        - 20FT
+                        - 40FT
+                        - 45FT
+                        - 48FT
+                        - 53FT
+              carrier:
+                description: Details about the carrier for the appointment.
+                type: object
+                properties:
+                  carrierName:
+                    description: Name of the carrier.
+                       Required for Create actions.
+                    type: string
+                    minLength: 1
+                    maxLength: 40
+                    example: "Express Shipping Ltd"
+                  carrierCRID:
+                    description: CRID of the carrier
+                    type: string
+                    minLength: 2
+                    maxLength: 15
+                    example: "123456789"
+                  commonContact:
+                    description: Contact details of the appointment requestor.
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                             contactName:
+                                  description: Contact name
+                                  type: string
+                                  minLength: 1
+                                  maxLength: 60
+                                  example: "Andrea Doria"
+                             telephone:
+                                  description: Phone number of contact, numbers only, no delimeters, optional + sign
+                                  type: string
+                                  minLength: 1
+                                  maxLength: 25
+                                  pattern: ^\+?[1-9][0-9]{7,14}$
+                                  example: "8005555037"
+                             mobilePhone:
+                                  description: Cell phone number of contact, numbers only, no delimeters, optional + sign
+                                  type: string
+                                  minLength: 1
+                                  maxLength: 25
+                                  pattern: ^\+?[1-9][0-9]{7,14}$
+                                  example: "8775552808"
+                             email:
+                                  description: Email address of contact
+                                  type: string
+                                  minLength: 1
+                                  maxLength: 50
+                                  pattern: ^[a-zA-Z0-9_+&*-]+(?:\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$
+                                  example: "user@example.com"
+                             fax:
+                                  description: Fax number of the contact, numbers only, no delimeters, optional +
+                                  type: string
+                                  minLength: 1
+                                  maxLength: 25
+                                  pattern: ^\+?[1-9][0-9]{7,14}$
+                                  example: "8005555038"
+                             contactID:
+                                  description: Identification details for the appointment requestor.
+                                  type: object
+                                  properties:
+                                    idValue:
+                                      description: Number on ID
+                                      type: string
+                                      minLength: 1
+                                      maxLength: 30
+                                      example: "C09-37-428"
+                                    idValueType:
+                                      description: Type of ID used
+                                      type: string
+                                      enum:
+                                        - DRIVERS_LICENSE
+                                        - EMPLOYEE_ID
+                             contactType:
+                                description: Carrier contact type
+                                type: string
+                                enum:
+                                  - ACCOUNT_MANAGER
+                                  - CARRIER
+                                  - CROSS_DOCK
+                                  - CUSTOMER_SERVICE
+                                  - HELP_DESK
+                                  - DROP_SHIP_COORDINATOR
+                                  - APPT_COORDINATOR
+                                  - PLANT
+                                  - INBOUND_FREIGHT_COORDINATOR
+                                  - SALES_OFFICE
+                                  - TRUCK_DRIVER
+                                  - WAREHOUSE
+                                  - OTHER
+              billOfLadingNumberArray:
+                description: max of two values in the array
+                type: array
+                items:
+                    type: object
+                    properties:
+                        billOfLadingNumber:
+                            description: Bill of lading number.
+                            type: string
+                            minLength: 1
+                            maxLength: 15
+                            example: "445566"
+        consigneeFacility:
+          description: Consignee Facility details.
+          type: object
+          properties:
+            facilityNumber:
+                description: Facility number.
+                   Required for Create actions.
+                type: string
+                minLength: 1
+                maxLength: 15
+                example: "777888999"
+            facilityType:
+                description: Type of facility
+                type: string
+                minLength: 1
+                maxLength: 15
+                example: "Warehouse"
+        comment:
+          description: Facility Comments
+          type: string
+          pattern: "^[A-Za-z0-9\\.\\-\\&\\# ]{1,256}$"
+          minLength: 1
+          maxLength: 256
+          example: "I have comments"
+        valueAddedService:
+          description: Special appointment types offered
+          type: string
+          enum:
+            - D1
+            - D2
+            - D3
+            - D4
+            - D5
+            - D6
+            - D7
+            - D8
+            - D9
+            - D10
+            - D11
+            - D12
+            - D13
+            - D14
+            - D15
+            - D16
+            - D17
+            - D18
+            - D19
+            - D20
+        shipperAppointmentRequestID:
+          pattern: "^[A-Za-z0-9-]{1,12}$"
+          description: Mailer assigned ID
+          type: string
+          minLength: 1
+          maxLength: 12
+          example: "1122334455"
+        consigneeAppointmentID:
+          pattern: "^[A-Za-z0-9]{1,12}$"
+          description: Appointment ID assigned from FAST.
+             Required for Update actions.
+          type: string
+          minLength: 1
+          maxLength: 12
+          example: "987654321"
+        schedulerID:
+          pattern: "^[A-Za-z0-9]{1,12}$"
+          description: Unique ID for mailer scheduler
+          type: string
+          minLength: 1
+          maxLength: 12
+          example: "123456789"
+        schedulerCorpID:
+          pattern: "^[A-Za-z0-9]{1,12}$"
+          description: Unique ID of the corporation generated by PostalOne!
+          type: string
+          minLength: 1
+          maxLength: 12
+          example: "777888999"
+        CRID:
+          pattern: "^[0-9]{2,15}$"
+          description: CRID assigned to Scheduler of FAST Appointment
+          type: string
+          minLength: 2
+          maxLength: 15
+          example: "987654321"
+        shipperMultiStopID:
+          pattern: "^[A-Za-z0-9]{1,12}$"
+          description: ID assigned to multistop appointments
+          type: string
+          minLength: 1
+          maxLength: 12
+          example: "777555333"
+        consigneeMultiStopID:
+          pattern: "^[A-Za-z0-9]{1,12}$"
+          description: Assigned Appointment ID for multistop appointment
+          type: string
+          minLength: 1
+          maxLength: 12
+          example: "111555999"
+        shipperStopNumber:
+          pattern: "^[0-9]{1,6}$"
+          description: Number of multistop appointments under FAST appointment
+          type: string
+          minLength: 1
+          maxLength: 6
+          example: "105"
+        pickupOrDelivery:
+          description: Type of delivery from mailer
+          type: string
+          enum:
+            - PICKUP
+            - DELIVERY
+        palletPositionCount:
+          description: The number of pallet positions in the appointment
+          type: integer
+          minimum: 0
+          maximum: 99
+          example: 5
+        includesElectronicLoad:
+          description: Indicates the Appointment is electronically processed with barcodes
+          type: string
+          enum:
+            - "YES"
+            - "NO"
+      additionalProperties: false
+    CancellationRequest:
+      title: Cancellation Request
+      description: Cancellation Request details.
+      type: object
+      required:
+        - consigneeAppointmentID
+        - shipperAppointmentRequestID
+        - CRID
+        - destinationEntry 
+        - cancelReasonCode
+        - cancelComments
+      xml:
+        wrapped: true
+      properties:
+        consigneeAppointmentID:
+          pattern: "^[A-Za-z0-9]{1,9}$"
+          type: string
+          description: FAST appointment ID.
+          maxLength: 9
+          example: "123456789"
+        shipperAppointmentRequestID:
+          pattern: "^[A-Za-z0-9-]{1,12}$"
+          type: string
+          description: Mailer assigned ID.
+          maxLength: 12
+          example: "123456789012"
+        CRID:
+          pattern: "^[0-9]{2,18}$"
+          type: string
+          description: The CRID of the appointment scheduler.
+          minLength: 2
+          maxLength: 18
+          example: "19652"
+        systemID:
+          pattern: "^[A-Za-z0-9]{1,30}$"
+          type: string
+          description: Identifies the submitting application.
+          maxLength: 30
+          default: "FastAPI"
+        destinationEntry:
+          description: Dropship is YES. Origin Entry is NO.
+          type: string
+          enum:
+            - "YES"
+            - "NO"
+        cancelReasonCode:
+          description: |
+            The reason the appointment was cancelled. Only set when the appointment is cancelled.
+            
+            - `A` - Appointment made in error
+            - `D` - Delivery appointment Cancelled per request of consignee
+            - `E` - Product combined into another existing appointment
+            - `M` - Major change in expected delivery window
+            - `P` - Product not available
+          type: string
+          enum:
+            - A
+            - D
+            - E
+            - M
+            - P
+        cancelComments:
+          description: Comments the user enters upon appointment cancellation
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: "Appointment Cancelled"
+    CancellationResponse:
+      title: Cancellation Response
+      description: Cancellation Response details.
+      type: object
+      required:
+        - consigneeAppointmentID
+        - shipperAppointmentRequestID
+        - CRID
+        - destinationEntry 
+        - cancelReasonCode
+        - cancelComments
+      xml:
+        wrapped: true
+      properties:
+        consigneeAppointmentID:
+          pattern: "^[A-Za-z0-9]{1,9}$"
+          type: string
+          description: FAST appointment ID.
+          maxLength: 9
+          example: "123456789"
+        shipperAppointmentRequestID:
+          pattern: "^[A-Za-z0-9-]{1,12}$"
+          type: string
+          description: Mailer assigned ID.
+          maxLength: 12
+          example: "123456789012"
+        CRID:
+          pattern: "^[0-9]{2,18}$"
+          type: string
+          description: The CRID of the appointment scheduler.
+          minLength: 2
+          maxLength: 18
+          example: "19652"
+        systemID:
+          pattern: "^[A-Za-z0-9]{1,30}$"
+          type: string
+          description: Identifies the submitting application.
+          maxLength: 30
+          default: "FastAPI"
+        destinationEntry:
+          description: Dropship is YES. Origin Entry is NO.
+          type: string
+          enum:
+            - "YES"
+            - "NO"
+        cancelReasonCode:
+          description: The reason the appointment was cancelled. Only set when the appointment is cancelled
+            A = Appointment made in error, D = Delivery appointment Cancelled per request of consignee, E = Product combined into another existing appointment,
+            M = Major change in expected delivery window, P = Product not available
+          type: string
+          enum:
+            - A
+            - D
+            - E
+            - M
+            - P
+        cancelComments:
+          pattern: "^[A-Za-z0-9\\.\\-\\&\\# ]{1,255}$"
+          description: Comments the user enters upon appointment cancellation
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: "Appointment Cancelled"
+        cancelNumber:
+          pattern: "^[0-9]{1,9}$"
+          type: string
+          description: The cancellation number of an appointment. Used in response only.
+          maxLength: 9
+          example: "123456789"
+    SlotAvailability:
+        title: Slot Availability
+        description: Request object for checking on slot availability
+        type: object
+        required:
+          - mailClass
+          - dropshipKey
+          - destinationEntry
+          - detailInfo
+          - consigneeFacility
+        properties:
+            oneTimeAppt:
+                type: boolean
+                description: |
+                  Determine query path for the search.
+
+                  Either oneTimeAppt or recurringAppt must be set to true.
+                example: false
+            recurringAppt:
+                type: boolean
+                description: |
+                  Determine query path for the search.
+
+                  Either oneTimeAppt or recurringAppt must be set to true.
+                example: false
+            mailClass:
+               description:  1 FIRST CLASS MAIL, 2 PERIODICALS, 3 USPS MARKETING MAIL (PREVIOUSLY STANDARD MAIL), 4 PACKAGE SERVICES, 6 PARCEL SELECT, 7 PRIORITY MAIL
+               type: string
+               enum: 
+                    - FIRST_CLASS
+                    - PERIODICALS
+                    - USPS_MARKETING_MAIL
+                    - PACKAGE_SERVICES
+                    - PARCEL_SELECT
+                    - PRIORITY_MAIL
+            dropshipKey:
+                pattern: "^[A-Za-z0-9]{7}$"
+                type: string
+                description: The dropship key for the appointment.
+                minLength: 7
+                maxLength: 7
+                example: "WV19652"
+            appointmentType:
+                type: string
+                description: The type of appointment. PALLET = 1, BEDLOAD = 2, DROP_AND_PICK = 3, SPEEDLINE = 4
+                enum:
+                    - PALLET
+                    - BEDLOAD
+                    - DROP_AND_PICK
+                    - SPEEDLINE
+            appointmentStartDate:
+                type: string
+                description: |
+                  The start date of the date range of the query. Cannot be in the past.
+
+                  Required for recurring appointments.
+                format: date-time
+                example: "2023-10-30T18:00:00Z"
+            appointmentEndDate:
+                type: string
+                description: |
+                  The end date of the date range of the query.  Maximum of 21 days in the future.
+
+                  Required for recurring appointments.
+                format: date-time
+                example: "2023-10-30T18:00:00Z"
+            destinationEntry:
+                description: Dropship is YES. Origin Entry is NO.
+                type: string
+                enum:
+                    - "YES"
+                    - "NO"
+            applyTiers:
+                description: The applyTiers used for the search. YES or NO
+                type: string
+                enum:
+                    - "YES"
+                    - "NO"
+            perishableInd:
+                type: boolean
+                description: Is it perishable
+                example: false
+            userCRID:
+                pattern: "^[0-9]{2,18}$"
+                type: string
+                description: CRID of the user
+                minLength: 2
+                maxLength: 18
+                example: "19652"
+            schedulerID:
+                pattern: "^[A-Za-z0-9]{1,12}$"
+                description: Unique ID for mailer scheduler
+                type: string
+                minLength: 1
+                maxLength: 12
+                example: "123456789"
+            schedulerCorpID:
+                pattern: "^[A-Za-z0-9]{1,12}$"
+                description: Unique ID of the corporation generated by PostalOne!
+                type: string
+                minLength: 1
+                maxLength: 12
+                example: "777888999"
+            schedulerCRID:
+                pattern: "^[0-9]{2,15}$"
+                description: CRID assigned to Scheduler of FAST Appointment
+                type: string
+                minLength: 2
+                maxLength: 15
+                example: "987654321"
+            consigneeFacility:
+                description: Consignee Facility details.
+                type: object
+                properties:
+                    facilityNumber:
+                        pattern: "^[A-Za-z0-9]{1,15}$"
+                        description: Facility number
+                        type: string
+                        minLength: 1
+                        maxLength: 15
+                        example: "777888999"
+                    facilityType:
+                        pattern: "^[A-Za-z0-9]{1,15}$"
+                        description: Type of facility
+                        type: string
+                        minLength: 1
+                        maxLength: 15
+                        example: "Warehouse"
+            detailInfo: 
+                description: Details of the appointment for the availability request.
+                type: object 
+                properties:
+                    consigneeContainerGroupingID:
+                        description: Consigner Container Grouping ID
+                        type: string
+                        example: "1234"
+                    shipperContainerGroupingID:
+                        description: Shipper Container Grouping ID
+                        type: string
+                        example: "1234"
+                    uspsSummary: 
+                        description: Additional details of the Appointment.
+                        type: array 
+                        items: 
+                            type: object
+                            properties:
+                              destinationDiscountIndicator: 
+                                  description: Indicator whether this is dropship (NO) or origin entry (YES) appointment 
+                                  type: string 
+                                  enum: 
+                                      - "YES"
+                                      - "NO" 
+                              zoneSkippingIndicator: 
+                                  description: Zone Skip in the Content of the appointment 
+                                  type: string 
+                                  enum: 
+                                      - "YES"
+                                      - "NO"
+                              processingCategory: 
+                                  description: Mail shape category 
+                                  type: string 
+                                  enum:  
+                                      - LT 
+                                      - FL 
+                                      - CD 
+                                      - OS 
+                                      - MP 
+                                      - IR 
+                                      - PF 
+                                      - CM 
+                                      - SP 
+                                      - MB 
+                              newsIndicator: 
+                                  description: Indicator for Newspaper 
+                                  type: string 
+                                  enum:  
+                                      - "YES" 
+                                      - "NO" 
+                              priorityMailIndicator: 
+                                  description: Priority Mail Indicator 
+                                  type: string 
+                                  enum:  
+                                      - "YES" 
+                                      - "NO" 
+                              verificationLocation: 
+                                  description: Verified Location for BMEU or DMU for FAST appointment 
+                                  type: string 
+                                  enum:  
+                                      - BMEU 
+                                      - DMU
+                              perishable:
+                                  description: Is it perishable.
+                                  type: string
+                                  enum: 
+                                    - "YES"
+                                    - "NO"
+                              mailClass:
+                                description: |
+                                  Numbers represent the mailClass within legacy systems for understanding
+                      
+                                  1 FIRST CLASS MAIL
+                                  2 PERIODICALS
+                                  3 USPS MARKETING MAIL (PREVIOUSLY STANDARD MAIL)
+                                  4 PACKAGE SERVICES
+                                  6 PARCEL SELECT
+                                  7 PRIORITY MAIL
+                                type: string
+                                enum: 
+                                  - FIRST_CLASS
+                                  - PERIODICALS
+                                  - USPS_MARKETING_MAIL
+                                  - PACKAGE_SERVICES
+                                  - PARCEL_SELECT
+                                  - PRIORITY_MAIL
+                                  - USPS_GROUND_ADVANTAGE
+                              rateType:
+                                description: Rate type describes mail class and mail shape combination
+                                type: string
+                                enum: 
+                                  - R
+                                  - L
+                                  - B
+                                  - C
+                                  - S
+                                  - S1
+                                  - S2
+                                  - S3
+                                  - S4
+                                  - S5
+                                  - S6
+                                  - S7
+                                  - F
+                                  - A
+                                  - N
+                                  - P
+                                  - T
+                                  - D
+                                  - X
+                                  - H
+                                  - M
+                                  - Z
+                                  - E
+                                  - E4
+                                  - G
+                                  - "1"
+                                  - "2"
+                                  - "3"
+                                  - "4"
+                                  - J
+                                  - K
+                                  - V
+                                  - W
+                                  - Y
+                                  - Q 
+            preferredAppt:
+                description: Preferred appointment if on one time appt selection path 
+                type: string 
+                format: date-time
+                example: "2026-06-27T01:00:00Z"
+                minLength: 0
+                maxLength: 20
+            apptTime:
+                pattern: ^([01]?[0-9]|2[0-3]):[0-5][0-9]$
+                description: Appointment time if on recurring appt selection path 
+                type: string 
+                example: "14:00"
+                minLength: 0
+                maxLength: 5
+            dayFrequency: 
+                description: Appointment daily frequency if on recurring appt selection path 
+                type: string 
+                enum:
+                     - DAILY
+                     - SATURDAY
+                     - SUNDAY
+                     - MONDAY
+                     - TUESDAY
+                     - WEDNESDAY
+                     - THURSDAY
+                     - FRIDAY
+            weekFrequency: 
+                description: Appointment weekly frequency if on recurring appt selection path 
+                type: string 
+                enum:
+                     - WEEKLY
+                     - BI_WEEKLY
+                     - FIRST
+                     - SECOND
+                     - THIRD
+                     - FOURTH
+                     - FIFTH
+                     - SIXTH
+            apptTrackingID:  
+                description: ShipperApptRequestID in xml, CustomerSequenceId on one time and recurring selection paths 
+                type: string 
+                example: "31499838"
+                minLength: 0
+                maxLength: 30
+            comments: 
+                description: Comments if on recurring appt selection path 
+                type: string 
+                example: "Recurring appoints for til 2026" 
+                minLength: 0
+                maxLength: 100
+                pattern: "^[A-Za-z0-9\\.\\-\\&\\# ]{1,100}$"
+            schedulerContentID: 
+                description: value set in recurring appt selection path 
+                type: string 
+                example: "31499838"
+                minLength: 0
+                maxLength: 30
+            shipperApptRequestID: 
+                description: value set in recurring appt selection path 
+                type: string 
+                example: "31499838"
+                minLength: 0
+                maxLength: 30
+            shipperMultiStopID: 
+                description: value set in one time appt selection path 
+                type: string 
+                example: "31499838"
+                minLength: 0
+                maxLength: 30
+            trailerInfo:
+                description: Information about the trailer for the appointment.
+                type: object
+                maxItems: 2
+                properties:
+                    trailer:
+                        description: max of two objects in the array
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            trailerNumber:
+                              description: Trailer Identifier
+                              type: string
+                              minLength: 1
+                              maxLength: 12
+                              example: "5050"
+                            trailerLength:
+                              description: Length of the trailer
+                              type: string
+                              enum:
+                                - 20FT
+                                - 40FT
+                                - 45FT
+                                - 48FT
+                                - 53FT
+                    carrier:
+                        description: Details about the carrier for the appointment.
+                        type: object
+                        properties:
+                          carrierName:
+                            description: Name of the carrier
+                            type: string
+                            minLength: 1
+                            maxLength: 40
+                            example: "Express Shipping Ltd"
+                          carrierCRID:
+                            description: CRID of the carrier
+                            type: string
+                            minLength: 2
+                            maxLength: 15
+                            example: "123456789"
+                          commonContact:
+                            description: Contact details of the appointment requestor.
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                               contactName:
+                                description: Contact name
+                                type: string
+                                minLength: 1
+                                maxLength: 60
+                                example: "Andrea Doria"
+                               telephone:
+                                description: Phone number of contact, numbers only, no delimeters, optional + sign
+                                type: string
+                                minLength: 1
+                                maxLength: 25
+                                pattern: ^\+?[1-9][0-9]{7,14}$
+                                example: "8005555037"
+                               mobilePhone:
+                                description: Cell phone number of contact, numbers only, no delimeters, optional + sign
+                                type: string
+                                minLength: 1
+                                maxLength: 25
+                                pattern: ^\+?[1-9][0-9]{7,14}$
+                                example: "8775552808"
+                               email:
+                                description: Email address of contact
+                                type: string
+                                minLength: 1
+                                maxLength: 50
+                                pattern: ^[a-zA-Z0-9_+&*-]+(?:\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$
+                                example: "user@example.com"
+                               fax:
+                                description: Fax number of the contact, numbers only, no delimeters, optional +
+                                type: string
+                                minLength: 1
+                                maxLength: 25
+                                pattern: ^\+?[1-9][0-9]{7,14}$
+                                example: "8005555038"
+                               contactID:
+                                description: Identification details for the appointment requestor.
+                                type: object
+                                properties:
+                                  idValue:
+                                    description: Number on ID
+                                    type: string
+                                    minLength: 1
+                                    maxLength: 30
+                                    example: "C09-37-428"
+                                  idValueType:
+                                    description: Type of ID used
+                                    type: string
+                                    enum:
+                                      - DRIVERS_LICENSE
+                                      - EMPLOYEE_ID
+                               contactType:
+                                  description: Carrier contact type
+                                  type: string
+                                  enum:
+                                    - ACCOUNT_MANAGER
+                                    - CARRIER
+                                    - CROSS_DOCK
+                                    - CUSTOMER_SERVICE
+                                    - HELP_DESK
+                                    - DROP_SHIP_COORDINATOR
+                                    - APPT_COORDINATOR
+                                    - PLANT
+                                    - INBOUND_FREIGHT_COORDINATOR
+                                    - SALES_OFFICE
+                                    - TRUCK_DRIVER
+                                    - WAREHOUSE
+                                    - OTHER
+                    billOfLadingNumberArray:
+                        description: max of two objects in the array
+                        type: array
+                        maxItems: 2
+                        items:
+                            type: object
+                            properties:
+                                billOfLadingNumber:
+                                    description: Bill of lading number.
+                                    type: string
+                                    minLength: 1
+                                    maxLength: 15
+                                    example: "445566"
+    ContainerLevel:
+      title: Container Level
+      description: Presort content level information. Required for Create actions.
+      type: string
+      enum:
+        - A
+        - B
+        - C
+        - D
+        - E
+        - F
+        - G
+        - H
+        - I
+        - J
+        - K
+        - M
+        - N
+        - P
+        - Q
+        - R
+        - S
+        - T
+        - U
+        - V
+        - W
+        - X
+        - Y
+        - Z
+        - AA
+        - AB
+        - AC
+        - AD
+        - AE
+        - AF
+        - AG
+    Slots:
+      title: Slots 
+      description: Available Slots
+      type: object
+      properties:
+        appointmentSlots:
+          description: Details of the available slots at the requested facility.
+          type: array
+          items:
+            type: object
+            properties:
+                slot:
+                  description: Available slots.
+                  type: string
+                  format: date-time
+                  example: "2023-10-30T18:00:00Z"
+      additionalProperties: false
+    ErrorMessage:
+      title: Error
+      type: object
+      properties:
+        apiVersion:
+          type: string
+          description: The version of the API that was used and that raised the error.
+          minLength: 0
+          maxLength: 30
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: The error status code that has been returned in response to the request.
+            message:
+              type: string
+              description: A human-readable message describing the error.
+            errors:
+              description: Details of the error message.
+              type: array
+              items:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status code response returned to the client.
+                  code:
+                    type: string
+                    description: An internal subordinate code used for error diagnosis.
+                  title:
+                    type: string
+                    description: A human-readable title that identifies the error.
+                  detail:
+                    type: string
+                    description: A human-readable description of the error that occurred.
+                  source:
+                    type: object
+                    properties:
+                      parameter:
+                        type: string
+                        description: The input in the request which caused an error.
+                      example:
+                        type: string
+                        description: An example of a valid value for the input parameter.
+                    additionalProperties: true
+                    description: The element that is suspected of originating the error.  Helps to pinpoint the problem.
+                additionalProperties: true
+          additionalProperties: true
+          description: The high-level error that has occurred as indicated by the status code.
+      additionalProperties: true
+      description: Standard error message response.
+  securitySchemes:
+    OAuth:
+      type: oauth2
+      description: |
+        The specificed APIs accept an access token formatted as a JSON Web
+        Token. The relative path to the OAuth2 version 3 API which supplies this
+        access token is provided below for reference.
+      flows:
+        clientCredentials:
+          tokenUrl: /oauth2/v3/token
+          scopes:
+            fast-appointments: check for available slots and create appointments
+        authorizationCode:
+          authorizationUrl: /oauth2/v3/authorize
+          tokenUrl: /oauth2/v3/token
+          scopes:
+            fast-appointments: get mail direction file links
+  examples: 
+    exampleAppointmentFullRequest: 
+      summary: An example of the Appointment Request schema json
+      description: This is an example of the AppointmentFull schema json
+      value:    {
+            "appointmentType": "BEDLOAD",
+            "destinationEntry": "YES",
+            "oneTimeAppointment": {
+                "preferredAppointment": "2025-09-10T06:00:00Z",
+                "optionalAppointment": {
+                    "optionalAppointmentStart": "2025-08-21T12:00:00Z",
+                    "optionalAppointmentEnd": "2025-08-21T12:00:00Z"
+                }
+            },
+            "CRID": "555555",
+            "shipperAppointmentRequestID": "KJS295969879",
+            "schedulerID": "240128023001",
+            "schedulerCorpID": "240128023000",
+            "shipperMultiStopID": "777555333",
+            "consigneeMultiStopID": "111555999",
+            "shipperStopNumber": "105",
+            "pickupOrDelivery": "DELIVERY",
+            "includesElectronicLoad": "YES",
+            "detailInfo": {
+                "uspsSummary": [
+                    {
+                        "destinationDiscountIndicator": "YES",
+                        "zoneSkippingIndicator": "NO",
+                        "fullServiceIndicator": "NO",
+                        "eInductionIndicator": "NO",
+                        "bedload": {
+                            "uspsContainerInfo": {
+                                "mailOwnerCRID": [
+                                    "12345678"
+                                ],
+                                "mailOwnerID": [
+                                    "12345678"
+                                ],
+                                "uspsPublicationID": [],
+                                "actualPieceCount": 2,
+                                "containerWeight": "2209.6",
+                                "IMCB": [
+                                    "99M123456-----ABC7235"
+                                ],
+                                "IMCBInfo": "SCANNED",
+                                "siblingBarcode": [
+                                    "99M123456-----XYZ7777"
+                                ],
+                                "postInductionStatus": "PLANNED",
+                                "containerDestination3digitZIP": "275",
+                                "containerDestination5digitZIP": "27531"
+                            },
+                            "sacks": [
+                                {
+                                    "preSortLevel": [{
+                                        "containerLevel": "M",
+                                        "count": 2
+                                    },{
+                                        "containerLevel": "A",
+                                        "count": 4
+                                    }],
+                                    "IMPB": "99M123456-----ABC9234",
+                                    "count": 8
+                                }
+                            ]
+                        },
+                        "perishable": "NO",
+                        "mailClass": "PARCEL_SELECT",
+                        "rateType": "D",
+                        "inHomeStart": "2025-08-31T18:00:00Z",
+                        "inHomeEnd": "2025-10-31T18:00:00Z",
+                        "processingCategory": "MP",
+                        "newsIndicator": "NO",
+                        "priorityMailIndicator": "NO",
+                        "verificationLocation": "BMEU",
+                        "mailContentName": "TestBedloadDSOT",
+                        "mailPreparerID": "240128023001",
+                        "mailPreparerCRID": "123456789",
+                        "schedulerContentID": "112239",
+                        "consigneeContentID": "654987321"
+                    }
+                ]
+            },
+            "trailerInfo": {
+                "trailer": [
+                    {
+                        "trailerNumber": "555666777",
+                        "trailerLength": "48FT"
+                    },
+                    {
+                        "trailerNumber": "555666778",
+                        "trailerLength": "48FT"
+                    }
+                ],
+                "carrier": {
+                    "carrierName": "my carrier",
+                    "carrierCRID": "4430796",
+                    "commonContact": [
+                        {
+                            "contactName": "Andrea Doria",
+                            "telephone": "8005555037",
+                            "mobilePhone": "8775552808",
+                            "email": "user@example.com",
+                            "fax": "8005555038",
+                            "contactID": {
+                                "idValue": "C09-37-428",
+                                "idValueType": "DRIVERS_LICENSE"
+                            },
+                            "contactType": "APPT_COORDINATOR"
+                        }
+                    ]
+                },
+                "billOfLadingNumberArray": [
+                    {
+                        "billOfLadingNumber": "1234567890"
+                    },
+                    {
+                        "billOfLadingNumber": "1234567891"
+                    }
+                ]
+            },
+            "consigneeFacility": {
+                "facilityNumber": "EV19160",
+                "facilityType": "PLANT"
+            },
+            "comment": "Put comments here",
+            "valueAddedService": "D1",
+            "palletPositionCount": 1
+      }
+    exampleAppointmentFullResponse: 
+      summary: An example of the Appointment Response schema json
+      description: This is an example of the AppointmentFull schema json
+      value:    {
+            "appointmentType": "BEDLOAD",
+            "destinationEntry": "YES",
+            "oneTimeAppointment": {
+                "preferredAppointment": "2025-09-10T06:00:00Z",
+                "optionalAppointment": {
+                    "optionalAppointmentStart": "2025-08-21T12:00:00Z",
+                    "optionalAppointmentEnd": "2025-08-21T12:00:00Z"
+                }
+            },
+            "CRID": "555555",
+            "shipperAppointmentRequestID": "KJS295969879",
+            "schedulerID": "240128023001",
+            "schedulerCorpID": "240128023000",
+            "shipperMultiStopID": "777555333",
+            "consigneeMultiStopID": "111555999",
+            "shipperStopNumber": "105",
+            "pickupOrDelivery": "DELIVERY",
+            "includesElectronicLoad": "YES",
+            "detailInfo": {
+                "uspsSummary": [
+                    {
+                        "destinationDiscountIndicator": "YES",
+                        "zoneSkippingIndicator": "NO",
+                        "fullServiceIndicator": "NO",
+                        "eInductionIndicator": "NO",
+                        "bedload": {
+                            "uspsContainerInfo": {
+                                "mailOwnerCRID": [
+                                    "12345678"
+                                ],
+                                "mailOwnerID": [
+                                    "12345678"
+                                ],
+                                "uspsPublicationID": [],
+                                "actualPieceCount": 2,
+                                "containerWeight": "2209.6",
+                                "IMCB": [
+                                    "99M123456-----ABC7235"
+                                ],
+                                "IMCBInfo": "SCANNED",
+                                "siblingBarcode": [
+                                    "99M123456-----XYZ7777"
+                                ],
+                                "postInductionStatus": "PLANNED",
+                                "containerDestination3digitZIP": "275",
+                                "containerDestination5digitZIP": "27531"
+                            },
+                            "sacks": [
+                                {
+                                    "preSortLevel": [{
+                                        "containerLevel": "M",
+                                        "count": 2
+                                    },{
+                                        "containerLevel": "A",
+                                        "count": 4
+                                    }],
+                                    "IMPB": "99M123456-----ABC9234",
+                                    "count": 8
+                                }
+                            ]
+                        },
+                        "perishable": "NO",
+                        "mailClass": "PARCEL_SELECT",
+                        "rateType": "D",
+                        "inHomeStart": "2025-08-31T18:00:00Z",
+                        "inHomeEnd": "2025-10-31T18:00:00Z",
+                        "processingCategory": "MP",
+                        "newsIndicator": "NO",
+                        "priorityMailIndicator": "NO",
+                        "verificationLocation": "BMEU",
+                        "mailContentName": "TestBedloadDSOT",
+                        "mailPreparerID": "240128023001",
+                        "mailPreparerCRID": "123456789",
+                        "schedulerContentID": "112239",
+                        "consigneeContentID": "654987321"
+                    }
+                ]
+            },
+            "trailerInfo": {
+                "trailer": [
+                    {
+                        "trailerNumber": "555666777",
+                        "trailerLength": "48FT"
+                    },
+                    {
+                        "trailerNumber": "555666778",
+                        "trailerLength": "48FT"
+                    }
+                ],
+                "carrier": {
+                    "carrierName": "my carrier",
+                    "carrierCRID": "4430796",
+                    "commonContact": [
+                        {
+                            "contactName": "Andrea Doria",
+                            "telephone": "8005555037",
+                            "mobilePhone": "8775552808",
+                            "email": "user@example.com",
+                            "fax": "8005555038",
+                            "contactID": {
+                                "idValue": "C09-37-428",
+                                "idValueType": "DRIVERS_LICENSE"
+                            },
+                            "contactType": "APPT_COORDINATOR"
+                        }
+                    ]
+                },
+                "billOfLadingNumberArray": [
+                    {
+                        "billOfLadingNumber": "1234567890"
+                    },
+                    {
+                        "billOfLadingNumber": "1234567891"
+                    }
+                ]
+            },
+            "consigneeFacility": {
+                "facilityNumber": "EV19160",
+                "facilityType": "PLANT"
+            },
+            "comment": "Put comments here",
+            "valueAddedService": "D1",
+            "palletPositionCount": 1
+      }
+    exampleUpdateAppointmentFullRequest: 
+      summary: An example of the Update Appointment Request schema json
+      description: This is an example of the AppointmentFull schema json
+      value:    {
+            "appointmentType": "BEDLOAD",
+            "destinationEntry": "YES",
+            "oneTimeAppointment": {
+                "preferredAppointment": "2025-09-10T06:00:00Z",
+                "optionalAppointment": {
+                    "optionalAppointmentStart": "2025-08-21T12:00:00Z",
+                    "optionalAppointmentEnd": "2025-08-21T12:00:00Z"
+                }
+            },
+            "CRID": "555555",
+            "shipperAppointmentRequestID": "KJS295969879",
+            "schedulerID": "240128023001",
+            "schedulerCorpID": "240128023000",
+            "shipperMultiStopID": "777555333",
+            "consigneeMultiStopID": "111555999",
+            "shipperStopNumber": "105",
+            "pickupOrDelivery": "DELIVERY",
+            "includesElectronicLoad": "YES",
+            "detailInfo": {
+                "uspsSummary": [
+                    {
+                        "destinationDiscountIndicator": "YES",
+                        "zoneSkippingIndicator": "NO",
+                        "fullServiceIndicator": "NO",
+                        "eInductionIndicator": "NO",
+                        "bedload": {
+                            "uspsContainerInfo": {
+                                "mailOwnerCRID": [
+                                    "12345678"
+                                ],
+                                "mailOwnerID": [
+                                    "12345678"
+                                ],
+                                "uspsPublicationID": [],
+                                "actualPieceCount": 2,
+                                "containerWeight": "2209.6",
+                                "IMCB": [
+                                    "99M123456-----ABC7235"
+                                ],
+                                "IMCBInfo": "SCANNED",
+                                "siblingBarcode": [
+                                    "99M123456-----XYZ7777"
+                                ],
+                                "postInductionStatus": "PLANNED",
+                                "containerDestination3digitZIP": "275",
+                                "containerDestination5digitZIP": "27531"
+                            },
+                            "sacks": [
+                                {
+                                    "preSortLevel": [{
+                                        "containerLevel": "M",
+                                        "count": 2
+                                    },{
+                                        "containerLevel": "A",
+                                        "count": 4
+                                    }],
+                                    "IMPB": "99M123456-----ABC9234",
+                                    "count": 8
+                                }
+                            ]
+                        },
+                        "perishable": "NO",
+                        "mailClass": "PARCEL_SELECT",
+                        "rateType": "D",
+                        "inHomeStart": "2025-08-31T18:00:00Z",
+                        "inHomeEnd": "2025-10-31T18:00:00Z",
+                        "processingCategory": "MP",
+                        "newsIndicator": "NO",
+                        "priorityMailIndicator": "NO",
+                        "verificationLocation": "BMEU",
+                        "mailContentName": "TestBedloadDSOT",
+                        "mailPreparerID": "240128023001",
+                        "mailPreparerCRID": "123456789",
+                        "schedulerContentID": "112239",
+                        "consigneeContentID": "654987321"
+                    }
+                ]
+            },
+            "trailerInfo": {
+                "trailer": [
+                    {
+                        "trailerNumber": "555666777",
+                        "trailerLength": "48FT"
+                    },
+                    {
+                        "trailerNumber": "555666778",
+                        "trailerLength": "48FT"
+                    }
+                ],
+                "carrier": {
+                    "carrierName": "my carrier",
+                    "carrierCRID": "4430796",
+                    "commonContact": [
+                        {
+                            "contactName": "Andrea Doria",
+                            "telephone": "8005555037",
+                            "mobilePhone": "8775552808",
+                            "email": "user@example.com",
+                            "fax": "8005555038",
+                            "contactID": {
+                                "idValue": "C09-37-428",
+                                "idValueType": "DRIVERS_LICENSE"
+                            },
+                            "contactType": "APPT_COORDINATOR"
+                        }
+                    ]
+                },
+                "billOfLadingNumberArray": [
+                    {
+                        "billOfLadingNumber": "1234567890"
+                    },
+                    {
+                        "billOfLadingNumber": "1234567891"
+                    }
+                ]
+            },
+            "consigneeFacility": {
+                "facilityNumber": "EV19160",
+                "facilityType": "PLANT"
+            },
+            "comment": "Put comments here",
+            "valueAddedService": "D1",
+            "palletPositionCount": 1
+      }
+    exampleCancellationRequest:
+      summary: An example of the Cancellation Request schema json
+      description: This is an example of the CancellationRequest schema json
+      value: {
+        consigneeAppointmentID: "123456789",
+        shipperAppointmentRequestID: "123457000000",
+        CRID: "19652",
+        systemID: "FastAPI",
+        destinationEntry: "YES",
+        cancelReasonCode: "A",
+        cancelComments: "Appointment Cancelled"}
+    exampleSlotAvailability: 
+      summary: An example of the SlotAvailability schema json
+      description: This is an example of the SlotAvailability schema json
+      value: {
+                "oneTimeAppt": false, 
+                "recurringAppt": false, 
+                "mailClass": "USPS_MARKETING_MAIL", 
+                "dropshipKey": "EV19160", 
+                "appointmentType": "DROP_AND_PICK", 
+                "appointmentStartDate": "2025-06-27T00:00:00Z", 
+                "appointmentEndDate": "2025-06-28T00:00:00Z", 
+                "destinationEntry": "NO", 
+                "applyTiers": "NO", 
+                "perishableInd": false, 
+                "userCRID": "99999999", 
+                "schedulerID": "187061439001", 
+                "schedulerCorpID": "210606401000", 
+                "schedulerCRID": "987654321", 
+                "consigneeFacility": { 
+                    "facilityNumber": "100053831", 
+                    "facilityType": "PLANT" 
+                },
+                "detailInfo": { 
+                    "uspsSummary": [{
+                        "destinationDiscountIndicator": "NO", 
+                        "zoneSkippingIndicator": "NO", 
+                        "processingCategory": "MP", 
+                        "newsIndicator": "NO", 
+                        "priorityMailIndicator": "NO", 
+                        "verificationLocation": "BMEU" ,
+                        "perishable": "YES",
+                        "mailClass": "USPS_MARKETING_MAIL",
+                        "rateType": "A"
+                    }] 
+                },
+                "preferredAppt": "2026-06-27T01:00:00Z",
+                "apptTime": "14:00",
+                "dayFrequency": "MONDAY",
+                "weekFrequency": "WEEKLY",
+                "apptTrackingID": "31499838",
+                "comments": "Recurring appoints for til 2026",
+                "schedulerContentID": "31499838",
+                "shipperApptRequestID" : "31499838",
+                "shipperMultiStopID": "31499838"
+      }

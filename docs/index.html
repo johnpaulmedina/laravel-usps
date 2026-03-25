@@ -3,17 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laravel USPS — Addresses API v3</title>
+    <title>Laravel USPS — Full API v3 Package</title>
     <style>
-        :root { --bg: #0f0f1a; --card: #1a1a2e; --text: #e2e8f0; --muted: #718096; --accent: #818cf8; --border: rgba(255,255,255,0.08); }
+        :root { --bg: #0f0f1a; --card: #1a1a2e; --text: #e2e8f0; --muted: #718096; --accent: #818cf8; --border: rgba(255,255,255,0.08); --green: #68d391; --blue: #63b3ed; --orange: #f6ad55; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-        .container { max-width: 860px; margin: 0 auto; padding: 60px 24px; }
+        .container { max-width: 960px; margin: 0 auto; padding: 60px 24px; }
         h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 8px; }
         h1 span { color: var(--accent); }
         .subtitle { color: var(--muted); font-size: 1.1rem; margin-bottom: 40px; }
         h2 { font-size: 1.3rem; font-weight: 700; margin: 40px 0 16px; color: var(--accent); }
+        h3 { font-size: 1rem; margin: 20px 0 8px; color: var(--text); }
         .badge { display: inline-block; background: var(--accent); color: #fff; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 12px; margin-left: 8px; vertical-align: middle; }
+        .badge-green { background: var(--green); color: #1a1a2e; }
         .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
         pre { background: #111; border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; line-height: 1.5; margin: 12px 0; }
         code { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
@@ -21,42 +23,60 @@
         table { width: 100%; border-collapse: collapse; margin: 12px 0; }
         th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
         th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .features { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+        .features { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
         .feature { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
         .feature-title { font-weight: 600; margin-bottom: 4px; }
         .feature-desc { font-size: 13px; color: var(--muted); }
+        .feature-count { font-size: 11px; color: var(--accent); margin-top: 4px; }
         a { color: var(--accent); text-decoration: none; }
         a:hover { text-decoration: underline; }
         .install { font-size: 15px; }
         footer { margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; text-align: center; }
+        .method-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-right: 4px; }
+        .get { background: rgba(99,179,237,0.2); color: var(--blue); }
+        .post { background: rgba(104,211,145,0.2); color: var(--green); }
+        .put { background: rgba(246,173,85,0.2); color: var(--orange); }
+        .delete { background: rgba(252,129,129,0.2); color: #fc8181; }
+        .patch { background: rgba(183,148,244,0.2); color: #b794f4; }
+        .domain-section { margin-bottom: 32px; }
+        .domain-section h3 { color: var(--accent); font-size: 1.1rem; margin-bottom: 12px; }
+        .endpoint-list { list-style: none; padding: 0; }
+        .endpoint-list li { padding: 6px 0; font-size: 14px; border-bottom: 1px solid var(--border); }
+        .endpoint-list li:last-child { border-bottom: none; }
+        .nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0; }
+        .nav a { background: var(--card); border: 1px solid var(--border); padding: 6px 14px; border-radius: 20px; font-size: 13px; transition: all 0.2s; }
+        .nav a:hover { background: var(--accent); color: #fff; text-decoration: none; border-color: var(--accent); }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Laravel <span>USPS</span> <span class="badge">v13.0</span></h1>
-        <p class="subtitle">USPS Addresses API v3 (OAuth2) for Laravel 10–13</p>
+        <h1>Laravel <span>USPS</span> <span class="badge">v2.0</span> <span class="badge badge-green">18 APIs</span></h1>
+        <p class="subtitle">Complete USPS API v3 (OAuth2) for Laravel 10-13 -- All 18 API domains, 75+ endpoints</p>
 
         <div class="card">
-            <p>The legacy USPS Web Tools XML API was <strong>retired January 2026</strong>. This package uses the new OAuth2-based REST/JSON API at <span class="inline-code">apis.usps.com</span>.</p>
+            <p>The legacy USPS Web Tools XML API was <strong>retired January 2026</strong>. This package uses the new OAuth2-based REST/JSON API at <span class="inline-code">apis.usps.com</span> with automatic token management and per-scope caching.</p>
         </div>
 
-        <div class="features">
-            <div class="feature">
-                <div class="feature-title">Address Validation</div>
-                <div class="feature-desc">Standardize and validate US addresses with ZIP+4</div>
-            </div>
-            <div class="feature">
-                <div class="feature-title">City/State Lookup</div>
-                <div class="feature-desc">Resolve city and state from a ZIP Code</div>
-            </div>
-            <div class="feature">
-                <div class="feature-title">ZIP Code Lookup</div>
-                <div class="feature-desc">Find ZIP Code for a given address</div>
-            </div>
-            <div class="feature">
-                <div class="feature-title">OAuth2 Built-in</div>
-                <div class="feature-desc">Automatic token management with caching</div>
-            </div>
+        <div class="nav">
+            <a href="#addresses">Addresses</a>
+            <a href="#tracking">Tracking</a>
+            <a href="#labels">Labels</a>
+            <a href="#intl-labels">Intl Labels</a>
+            <a href="#prices">Prices</a>
+            <a href="#intl-prices">Intl Prices</a>
+            <a href="#standards">Standards</a>
+            <a href="#standards-dir">Standards Dir</a>
+            <a href="#standards-files">Standards Files</a>
+            <a href="#intl-standards">Intl Standards</a>
+            <a href="#locations">Locations</a>
+            <a href="#pickup">Carrier Pickup</a>
+            <a href="#containers">Containers</a>
+            <a href="#payments">Payments</a>
+            <a href="#campaigns">Campaigns</a>
+            <a href="#pkg-campaigns">Pkg Campaigns</a>
+            <a href="#adjustments">Adjustments</a>
+            <a href="#disputes">Disputes</a>
+            <a href="#appointments">Appointments</a>
         </div>
 
         <h2>Installation</h2>
@@ -64,43 +84,300 @@
 
         <h2>Configuration</h2>
         <pre><code>php artisan vendor:publish --tag=usps-config</code></pre>
-        <p>Add to your <span class="inline-code">.env</span>:</p>
         <pre><code>USPS_CLIENT_ID=your-client-id
 USPS_CLIENT_SECRET=your-client-secret</code></pre>
         <p style="margin-top:8px; color: var(--muted); font-size: 13px;">Register at <a href="https://developer.usps.com">developer.usps.com</a> for credentials.</p>
 
-        <h2>Usage</h2>
+        <h2>API Domains</h2>
 
-        <h3 style="font-size:1rem; margin:20px 0 8px; color:var(--text);">Validate an Address</h3>
-        <pre><code>use Usps;
+        <div class="features">
+            <div class="feature">
+                <div class="feature-title">Addresses</div>
+                <div class="feature-desc">Validate, standardize, ZIP/city lookup</div>
+                <div class="feature-count">3 endpoints</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">Tracking</div>
+                <div class="feature-desc">Track packages, notifications, proof of delivery</div>
+                <div class="feature-count">3 endpoints</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">Domestic Labels</div>
+                <div class="feature-desc">Create, cancel, reprint, branding, indicia, IMB</div>
+                <div class="feature-count">12 endpoints</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">International Labels</div>
+                <div class="feature-desc">Create, reprint, cancel international labels</div>
+                <div class="feature-count">4 endpoints</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">Domestic Prices</div>
+                <div class="feature-desc">Base rates, extra services, total rates, letters</div>
+                <div class="feature-count">5 endpoints</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">International Prices</div>
+                <div class="feature-desc">International postage rate calculations</div>
+                <div class="feature-count">5 endpoints</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">Service Standards</div>
+                <div class="feature-desc">Delivery estimates and standards by ZIP</div>
+                <div class="feature-count">2 endpoints</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">Standards Directory</div>
+                <div class="feature-desc">Bulk service standard data with pagination</div>
+                <div class="feature-count">2 endpoints</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">Standards Files</div>
+                <div class="feature-desc">Download service standard data files</div>
+                <div class="feature-count">2 endpoints</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">Intl Standards</div>
+                <div class="feature-desc">International delivery standard messages</div>
+                <div class="feature-count">1 endpoint</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">Locations</div>
+                <div class="feature-desc">Post offices, dropoff locations, parcel lockers</div>
+                <div class="feature-count">3 endpoints</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">Carrier Pickup</div>
+                <div class="feature-desc">Schedule, get, update, cancel pickups</div>
+                <div class="feature-count">5 endpoints</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">Containers</div>
+                <div class="feature-desc">Container labels, package management, manifests</div>
+                <div class="feature-count">5 endpoints</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">Payments</div>
+                <div class="feature-desc">Payment authorization tokens, account inquiry</div>
+                <div class="feature-count">2 endpoints</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">Mail Campaigns</div>
+                <div class="feature-desc">Informed Delivery mail campaigns, IMBs</div>
+                <div class="feature-count">9 endpoints</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">Pkg Campaigns</div>
+                <div class="feature-desc">Informed Delivery package campaigns</div>
+                <div class="feature-count">6 endpoints</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">Adjustments</div>
+                <div class="feature-desc">Shipping charge adjustments by tracking number</div>
+                <div class="feature-count">1 endpoint</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">Disputes</div>
+                <div class="feature-desc">Create disputes for pricing adjustments</div>
+                <div class="feature-count">1 endpoint</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">Appointments</div>
+                <div class="feature-desc">FAST facility appointments, availability</div>
+                <div class="feature-count">4 endpoints</div>
+            </div>
+        </div>
 
-$result = Usps::validate([
-    'Address' => '1600 Pennsylvania Ave NW',
-    'City'    => 'Washington',
-    'State'   => 'DC',
-    'Zip'     => '20500',
-]);</code></pre>
+        <h2>Endpoint Reference</h2>
 
-        <h3 style="font-size:1rem; margin:20px 0 8px; color:var(--text);">City/State Lookup</h3>
-        <pre><code>$result = Usps::cityStateLookup('33101');
-// ['city' => 'MIAMI', 'state' => 'FL', ...]</code></pre>
+        <div id="addresses" class="domain-section">
+            <h3>Addresses <span class="inline-code">Usps::validate()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/addresses/v3/address</span> Validate and standardize an address</li>
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/addresses/v3/city-state</span> City/State by ZIP code</li>
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/addresses/v3/zipcode</span> ZIP code by address</li>
+            </ul>
+        </div>
 
-        <h3 style="font-size:1rem; margin:20px 0 8px; color:var(--text);">ZIP Code Lookup</h3>
-        <pre><code>$result = Usps::zipCodeLookup([
-    'streetAddress' => '1600 Pennsylvania Ave NW',
-    'city'          => 'Washington',
-    'state'         => 'DC',
-]);</code></pre>
+        <div id="tracking" class="domain-section">
+            <h3>Tracking <span class="inline-code">Usps::tracking()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/tracking/v3r2/tracking</span> Get package tracking status</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/tracking/v3r2/tracking/{id}/notifications</span> Register notifications</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/tracking/v3r2/tracking/{id}/proof-of-delivery</span> Request proof of delivery</li>
+            </ul>
+        </div>
 
-        <h2>API Endpoints</h2>
-        <table>
-            <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
-            <tbody>
-                <tr><td>GET</td><td><span class="inline-code">/addresses/v3/address</span></td><td>Validate and standardize</td></tr>
-                <tr><td>GET</td><td><span class="inline-code">/addresses/v3/city-state</span></td><td>City/State by ZIP</td></tr>
-                <tr><td>GET</td><td><span class="inline-code">/addresses/v3/zipcode</span></td><td>ZIP by address</td></tr>
-            </tbody>
-        </table>
+        <div id="labels" class="domain-section">
+            <h3>Domestic Labels <span class="inline-code">Usps::labels()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/labels/v3/label</span> Create shipping label</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/labels/v3/return-label</span> Create return label</li>
+                <li><span class="method-badge delete">DELETE</span> <span class="inline-code">/labels/v3/label/{id}</span> Cancel/refund label</li>
+                <li><span class="method-badge patch">PATCH</span> <span class="inline-code">/labels/v3/label/{id}</span> Edit label attributes</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/labels/v3/indicia</span> Create First-Class indicia</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/labels/v3/indicia/imb</span> Create IMB label</li>
+                <li><span class="method-badge delete">DELETE</span> <span class="inline-code">/labels/v3/indicia/imb/{imb}</span> Cancel IMB</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/labels/v3/branding</span> Upload branding image</li>
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/labels/v3/branding</span> List branding images</li>
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/labels/v3/branding/{uuid}</span> Get branding image</li>
+                <li><span class="method-badge delete">DELETE</span> <span class="inline-code">/labels/v3/branding/{uuid}</span> Delete branding image</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/labels/v3/label-reprint/{id}</span> Reprint label</li>
+            </ul>
+        </div>
+
+        <div id="intl-labels" class="domain-section">
+            <h3>International Labels <span class="inline-code">Usps::internationalLabels()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/international-labels/v3/international-label</span> Create international label</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/international-labels/v3/international-label-reprint/{id}</span> Reprint</li>
+                <li><span class="method-badge delete">DELETE</span> <span class="inline-code">/international-labels/v3/international-label/{id}</span> Cancel</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/international-labels/v3/indicia</span> Create international indicia</li>
+            </ul>
+        </div>
+
+        <div id="prices" class="domain-section">
+            <h3>Domestic Prices <span class="inline-code">Usps::domesticPrices()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/prices/v3/base-rates/search</span> Base rate search</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/prices/v3/extra-service-rates/search</span> Extra service rates</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/prices/v3/base-rates-list/search</span> Eligible products list</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/prices/v3/total-rates/search</span> Total rates with fees</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/prices/v3/letter-rates/search</span> First-Class letter rates</li>
+            </ul>
+        </div>
+
+        <div id="intl-prices" class="domain-section">
+            <h3>International Prices <span class="inline-code">Usps::internationalPrices()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/international-prices/v3/base-rates/search</span> Base rate search</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/international-prices/v3/extra-service-rates/search</span> Extra service rates</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/international-prices/v3/base-rates-list/search</span> Eligible products</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/international-prices/v3/total-rates/search</span> Total rates</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/international-prices/v3/letter-rates/search</span> Letter rates</li>
+            </ul>
+        </div>
+
+        <div id="standards" class="domain-section">
+            <h3>Service Standards <span class="inline-code">Usps::serviceStandards()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/service-standards/v3/estimates</span> Delivery estimates</li>
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/service-standards/v3/standards</span> Service standards</li>
+            </ul>
+        </div>
+
+        <div id="standards-dir" class="domain-section">
+            <h3>Service Standards Directory <span class="inline-code">Usps::serviceStandardsDirectory()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/service-standards-directory/v3/zip5Codes</span> Valid ZIP codes</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/service-standards-directory/v3/reporter</span> Standards directory report</li>
+            </ul>
+        </div>
+
+        <div id="standards-files" class="domain-section">
+            <h3>Service Standards Files <span class="inline-code">Usps::serviceStandardsFiles()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/service-standards-files/v3/files</span> List available files</li>
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/service-standards-files/v3/files/{id}/generate-signed-url</span> Signed download URL</li>
+            </ul>
+        </div>
+
+        <div id="intl-standards" class="domain-section">
+            <h3>International Service Standards <span class="inline-code">Usps::internationalServiceStandards()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/international-service-standard/v3/international-service-standard</span> Delivery standard message</li>
+            </ul>
+        </div>
+
+        <div id="locations" class="domain-section">
+            <h3>Locations <span class="inline-code">Usps::locations()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/locations/v3/dropoff-locations</span> Destination entry dropoff locations</li>
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/locations/v3/post-office-locations</span> Post office locations</li>
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/locations/v3/parcel-locker-locations</span> Parcel locker locations</li>
+            </ul>
+        </div>
+
+        <div id="pickup" class="domain-section">
+            <h3>Carrier Pickup <span class="inline-code">Usps::carrierPickup()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/pickup/v3/carrier-pickup/eligibility</span> Check address eligibility</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/pickup/v3/carrier-pickup</span> Schedule a pickup</li>
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/pickup/v3/carrier-pickup/{id}</span> Get pickup details</li>
+                <li><span class="method-badge put">PUT</span> <span class="inline-code">/pickup/v3/carrier-pickup/{id}</span> Update pickup</li>
+                <li><span class="method-badge delete">DELETE</span> <span class="inline-code">/pickup/v3/carrier-pickup/{id}</span> Cancel pickup</li>
+            </ul>
+        </div>
+
+        <div id="containers" class="domain-section">
+            <h3>Containers <span class="inline-code">Usps::containers()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/containers/v3/containers</span> Create container label</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/containers/v3/containers/{id}/packages</span> Add packages</li>
+                <li><span class="method-badge delete">DELETE</span> <span class="inline-code">/containers/v3/containers/{id}/packages</span> Remove all packages</li>
+                <li><span class="method-badge delete">DELETE</span> <span class="inline-code">/containers/v3/containers/{id}/packages/{tn}</span> Remove single package</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/containers/v3/containers/manifest</span> Close and manifest</li>
+            </ul>
+        </div>
+
+        <div id="payments" class="domain-section">
+            <h3>Payments <span class="inline-code">Usps::payments()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/payments/v3/payment-authorization</span> Create payment auth token</li>
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/payments/v3/payment-account/{id}</span> Account inquiry</li>
+            </ul>
+        </div>
+
+        <div id="campaigns" class="domain-section">
+            <h3>Informed Delivery Campaigns <span class="inline-code">Usps::campaigns()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/campaigns</span> Create campaign</li>
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/campaigns</span> Search campaigns</li>
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/campaigns/{id}</span> Get single campaign</li>
+                <li><span class="method-badge put">PUT</span> <span class="inline-code">/campaigns/{id}</span> Edit campaign</li>
+                <li><span class="method-badge delete">DELETE</span> <span class="inline-code">/campaigns/{id}</span> Cancel campaign</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/campaigns/{id}/imbs</span> Add IMBs to NON-SEQ campaign</li>
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/campaigns/{crid}/callbacks</span> List callback keys</li>
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/campaigns/{crid}/{key}/summary</span> Callback summary</li>
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/campaigns/{crid}/{key}/details</span> Callback error details</li>
+            </ul>
+        </div>
+
+        <div id="pkg-campaigns" class="domain-section">
+            <h3>Package Campaigns <span class="inline-code">Usps::packageCampaigns()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/package-campaigns</span> Create package campaign</li>
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/package-campaigns</span> Search package campaigns</li>
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/package-campaigns/{id}</span> Get single campaign</li>
+                <li><span class="method-badge put">PUT</span> <span class="inline-code">/package-campaigns/{id}</span> Edit package campaign</li>
+                <li><span class="method-badge delete">DELETE</span> <span class="inline-code">/package-campaigns/{id}</span> Cancel package campaign</li>
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/package-campaigns/{id}/tracking-numbers</span> Add tracking numbers</li>
+            </ul>
+        </div>
+
+        <div id="adjustments" class="domain-section">
+            <h3>Adjustments <span class="inline-code">Usps::adjustments()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/adjustments/v3/adjustments/{crid}/{tn}/{eventType}</span> Get adjustments</li>
+            </ul>
+        </div>
+
+        <div id="disputes" class="domain-section">
+            <h3>Disputes <span class="inline-code">Usps::disputes()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/disputes/v3/dispute</span> Create dispute</li>
+            </ul>
+        </div>
+
+        <div id="appointments" class="domain-section">
+            <h3>Appointments <span class="inline-code">Usps::appointments()</span></h3>
+            <ul class="endpoint-list">
+                <li><span class="method-badge post">POST</span> <span class="inline-code">/fast-appointments/appointment</span> Create appointment</li>
+                <li><span class="method-badge put">PUT</span> <span class="inline-code">/fast-appointments/appointment</span> Update appointment</li>
+                <li><span class="method-badge delete">DELETE</span> <span class="inline-code">/fast-appointments/appointment</span> Cancel appointment</li>
+                <li><span class="method-badge get">GET</span> <span class="inline-code">/appointment-availability</span> Check availability</li>
+            </ul>
+        </div>
 
         <h2>Requirements</h2>
         <table>

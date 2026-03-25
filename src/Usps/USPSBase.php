@@ -26,6 +26,12 @@ abstract class USPSBase
     protected string $errorMessage = '';
     protected array $response = [];
 
+    /**
+     * The OAuth scope(s) required by this API class.
+     * Subclasses should override this to specify their scope.
+     */
+    protected string $scope = 'addresses';
+
     public function __construct(string $clientId = '', string $clientSecret = '')
     {
         $this->clientId = $clientId;
@@ -41,14 +47,14 @@ abstract class USPSBase
             return $this->accessToken;
         }
 
-        $cacheKey = 'usps_oauth_token_' . md5($this->clientId);
+        $cacheKey = 'usps_oauth_token_' . md5($this->clientId . '_' . $this->scope);
 
-        $this->accessToken = Cache::remember($cacheKey, 3000, function () {
+        $this->accessToken = Cache::remember($cacheKey, 3000, function (): string {
             $response = Http::asForm()->post(self::API_URL . self::TOKEN_URL, [
                 'grant_type' => 'client_credentials',
                 'client_id' => $this->clientId,
                 'client_secret' => $this->clientSecret,
-                'scope' => 'addresses',
+                'scope' => $this->scope,
             ]);
 
             if (!$response->successful()) {
@@ -63,6 +69,9 @@ abstract class USPSBase
 
     /**
      * Make an authenticated GET request to the USPS API.
+     *
+     * @param array<string, mixed> $query
+     * @return array<string, mixed>
      */
     protected function apiGet(string $path, array $query = []): array
     {
@@ -70,6 +79,84 @@ abstract class USPSBase
             ->accept('application/json')
             ->get(self::API_URL . $path, $query);
 
+        return $this->handleResponse($response);
+    }
+
+    /**
+     * Make an authenticated POST request to the USPS API.
+     *
+     * @param array<string, mixed> $data
+     * @param array<string, string> $headers
+     * @return array<string, mixed>
+     */
+    protected function apiPost(string $path, array $data = [], array $headers = []): array
+    {
+        $response = Http::withToken($this->getAccessToken())
+            ->accept('application/json')
+            ->withHeaders($headers)
+            ->post(self::API_URL . $path, $data);
+
+        return $this->handleResponse($response);
+    }
+
+    /**
+     * Make an authenticated PUT request to the USPS API.
+     *
+     * @param array<string, mixed> $data
+     * @param array<string, string> $headers
+     * @return array<string, mixed>
+     */
+    protected function apiPut(string $path, array $data = [], array $headers = []): array
+    {
+        $response = Http::withToken($this->getAccessToken())
+            ->accept('application/json')
+            ->withHeaders($headers)
+            ->put(self::API_URL . $path, $data);
+
+        return $this->handleResponse($response);
+    }
+
+    /**
+     * Make an authenticated PATCH request to the USPS API.
+     *
+     * @param array<string, mixed> $data
+     * @param array<string, string> $headers
+     * @return array<string, mixed>
+     */
+    protected function apiPatch(string $path, array $data = [], array $headers = []): array
+    {
+        $response = Http::withToken($this->getAccessToken())
+            ->accept('application/json')
+            ->withHeaders($headers)
+            ->patch(self::API_URL . $path, $data);
+
+        return $this->handleResponse($response);
+    }
+
+    /**
+     * Make an authenticated DELETE request to the USPS API.
+     *
+     * @param array<string, mixed> $data
+     * @param array<string, string> $headers
+     * @return array<string, mixed>
+     */
+    protected function apiDelete(string $path, array $data = [], array $headers = []): array
+    {
+        $response = Http::withToken($this->getAccessToken())
+            ->accept('application/json')
+            ->withHeaders($headers)
+            ->delete(self::API_URL . $path, $data);
+
+        return $this->handleResponse($response);
+    }
+
+    /**
+     * Handle the HTTP response, setting error state and returning the body.
+     *
+     * @return array<string, mixed>
+     */
+    protected function handleResponse(\Illuminate\Http\Client\Response $response): array
+    {
         $this->response = $response->json() ?? [];
 
         if (!$response->successful()) {
@@ -105,6 +192,9 @@ abstract class USPSBase
         return $this->errorMessage;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getResponse(): array
     {
         return $this->response;

@@ -1,0 +1,524 @@
+openapi: 3.0.0
+info:
+  title: Service Standards Directory
+  description: |
+    Contact Us: [USPS API Support](https://emailus.usps.com/s/usps-APIs) | [Terms of Service](https://about.usps.com/termsofuse.htm)
+    
+    The Service Standards Directory provides a secure and efficient way to return service standard data.  Origin/Destination ZIP Codes can be 3-digit or 5-digit.
+   
+    ### Workflow
+    * **Request the valid ZIP Codes** (Optional): Use the `/zip5Codes` endpoint to return the valid 5-digit ZIP Codes to utilize in the `/reporter` endpoint.
+    * **Request the Service Standards**: Use the `/reporter` endpoint to return the Service Standards.
+  version: 3.0.1
+  x-updated-on: 10/20/2025 - Service Delivery Calculator Team - Removed PME. Added pagination and invalid ZIPs in response. Changed ZIPLength parameter to responseFormat. Also added zip5Codes endpoint. - Michael S Salato
+  x-reviewed-on: 10/20/2025 - Service Delivery Calculator Team - update based peer review feedback - Thuy Vi Nguyen
+  x-approved-on: MM/DD/YYYY - API Governance Team
+
+    
+servers:
+  - url: https://apis.usps.com/service-standards-directory/v3
+    description: Production Environment Endpoint
+  - url: https://apis-tem.usps.com/service-standards-directory/v3
+    description: TEM Environment Endpoint
+
+paths:
+  /zip5Codes:
+    get:
+      tags:
+        - Resources
+      summary: Return valid 5-digit ZIP codes.
+      description: |
+        **Return valid 5-digit Origin and Destination ZIP codes that have service standards associated with them and are not exempt.
+      operationId: get-return-valid-zip5-codes
+      responses:
+        '200':
+          description: Content returned successfully.
+          content:
+            application/json:
+              schema: 
+                  $ref: '#/components/schemas/Zip5CodesResponse'
+              examples:
+                Zip5CodesExample:
+                  $ref: '#/components/examples/Zip5CodesExample'
+        '400':
+          description: Bad Request. There is an error in the received request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resource not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      security:
+        - OAuth:
+            - service-standards-directory
+
+  /reporter:
+    post:
+      tags:
+        - Resources
+      summary: Return directory of service standards
+      description: |
+        **Request Directory of Service Standards**: Return service standard data. Origin/Destination ZIP codes can be 3-digit or 5-digit.
+      operationId: post-return-service-standards-directory
+      responses:
+        '200':
+          description: Content returned successfully.
+          content:
+            application/json:
+              schema: 
+                  $ref: '#/components/schemas/ServiceStandardsResponse'
+              examples:
+                DirectoryOfServiceStandards:
+                  $ref: '#/components/examples/DirectoryOfServiceStandards'
+                    
+        '400':
+          description: Bad Request. There is an error in the received request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resource not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                originZIPCode:
+                  type: string
+                  description: Origin ZIP Code. 3 or 5 digits. Single ("230" or "23023"), comma-separated values ("123,124,264" or "12356,12357,26589"), or ranges ("132-245" or "12352-23425").
+                  pattern: "^\\d{3}$|^\\d{3}-\\d{3}$|^\\d{5}$|^\\d{5}-\\d{5}$|^(\\s*\\d{3}\\s*,)*\\s*\\d{3}\\s*$|^(\\s*\\d{5}\\s*,)*\\s*\\d{5}\\s*$"
+                  example: '230, 231, 232, 450'
+                destinationZIPCode:
+                  type: string
+                  description: Destination ZIP Code. 3 or 5 digits. Single ("230" or "23023"), comma-separated values ("123,124,264" or "12356,12357,26589"), or ranges ("132-245" or "12352-23425").
+                  pattern: "^\\d{3}$|^\\d{3}-\\d{3}$|^\\d{5}$|^\\d{5}-\\d{5}$|^(\\s*\\d{3}\\s*,)*\\s*\\d{3}\\s*$|^(\\s*\\d{5}\\s*,)*\\s*\\d{5}\\s*$"
+                  example: '230, 231, 232, 450'
+                responseFormat:
+                  type: string
+                  description: Used to specify whether to return 3x3 or 5x5 digit ZIP codes in the response.
+                  enum:
+                  - 3D_BASE
+                  - 5D_EXPANDED
+                  example: '3D_BASE'
+                mailClass:
+                  type: string
+                  description: Mail Class. Single or comma separated values. For USPS GROUND ADVANTAGE HEAVYWEIGHT just use USPS GROUND ADVANTAGE for more than one pound.
+                  enum:
+                  - PACKAGE_SERVICES
+                  - USPS_GROUND_ADVANTAGE_LIGHTWEIGHT
+                  - FIRST_CLASS_MAIL
+                  - PRIORITY_MAIL
+                  - USPS_GROUND_ADVANTAGE
+                  - PERIODICALS
+                  - MARKETING_MAIL
+                  - PRESORT_FIRST_CLASS
+                  example: 'PERIODICALS'
+                offset:
+                  type: number
+                  description: The number of service standard objects to skip before returning the results.
+                  minimum: 0
+                  example: 0
+                limit:
+                  type: number
+                  description: The number of service standard objects to return.
+                  minimum: 1
+                  maximum: 20000
+                  example: 10000
+                returnUnsupportedZIPCodes:
+                  type: boolean
+                  description: true or false value specifying whether `unsupportedZIPCodes`, `exemptOriginZIPCodes`, and `exemptDestinationZIPCodes` should be returned in the response.
+                  example: false
+      security:
+        - OAuth:
+            - service-standards-directory
+
+
+components:
+  schemas:
+    ServiceStandardsResponse:
+        type: object
+        properties:
+          metadata:
+            type: object
+            description: Metadata containing information for pagination
+            properties:
+              totalCount:
+                type: number
+                description: Total number of service standard objects to be returned in the API request (sum of all paginated results).
+                minimum: 0
+              page:
+                type: number
+                description: The current page number.
+                minimum: 0
+              totalPages:
+                type: number
+                description: Total number of pages, based on the user provided limit and totalCount.
+                minimum: 0
+              offset:
+                type: number
+                description: The number of service standard objects to skip before returning the results. Based on the user provided offset.
+                minimum: 0
+              limit:
+                type: number
+                description: The number of service standard objects to return. Based on the user provided limit.
+                minimum: 1
+                maximum: 20000
+              links:
+                type: object
+                description: Pagination navigation links.
+                properties:
+                  self:
+                    type: object
+                    description: Link to the current page of results.
+                    properties:
+                      href:
+                        type: string
+                        format: uri
+                        description: Endpoint URL (always /reporter)
+                      method:
+                        type: string
+                        enum: 
+                         - POST
+                        description: HTTP method to use (POST)
+                      body:
+                        type: object
+                        description: Request body for this page
+                  next:
+                    type: object
+                    nullable: true
+                    description: Link to the next page of results.
+                    properties:
+                      href:
+                        type: string
+                        description: Endpoint URL (always /reporter)
+                        format: uri
+                      method:
+                        type: string
+                        enum: 
+                          - POST
+                        description: HTTP method to use (POST)
+                      body:
+                        type: object
+                        description: Request body for this page
+                  previous:
+                    type: object
+                    nullable: true
+                    description: Link to the previous page of results.
+                    properties:
+                      href:
+                        type: string
+                        description: Endpoint URL (always /reporter)
+                        format: uri
+                      method:
+                        type: string
+                        enum: 
+                          - POST
+                        description: HTTP method to use (POST)
+                      body:
+                        type: object
+                        description: Request body for this page
+                  first:
+                    type: object
+                    nullable: true
+                    description: Link to the first page of results.
+                    properties:
+                      href:
+                        type: string
+                        description: Endpoint URL (always /reporter)
+                        format: uri
+                      method:
+                        type: string
+                        enum: 
+                          - POST
+                        description: HTTP method to use (POST)
+                      body:
+                        type: object
+                        description: Request body for this page
+                  last:
+                    type: object
+                    nullable: true
+                    description: Link to the last page of results.
+                    properties:
+                      href:
+                        type: string
+                        description: Endpoint URL (always /reporter)
+                        format: uri
+                      method:
+                        type: string
+                        enum: 
+                          - POST
+                        description: HTTP method to use (POST)
+                      body:
+                        type: object
+                        description: Request body for this page
+          publishDate:
+            type: string
+            format: date
+            description: Publish date of data (YYYY-MM-DD)
+          effectiveDate:
+            type: string
+            format: date
+            description: Effective date of data (YYYY-MM-DD)
+          standards:
+            type: array
+            description: service standards
+            items:
+              type: object
+              description: List of service standards
+              properties:
+                originZIPCode:
+                  type: string
+                  pattern: "^\\d{3}$|^\\d{5}$"
+                  description: Origin ZIP Code
+                destinationZIPCode:
+                  type: string
+                  pattern: "^\\d{3}$|^\\d{5}$"
+                  description: Destination ZIP Code
+                FCMSvcStd:
+                  type: number
+                  description: First-Class Mail Single Piece Service Standard
+                GAHSvcStd:
+                  type: number
+                  description: Ground Advantage Heavyweight >= 16oz Service Standard
+                GALSvcStd:
+                  type: number
+                  description: Ground Advantage Lightweight <= 15.999oz
+                MktSvcStd:
+                  type: number
+                  description: Marketing Mail Service Standard
+                PerSvcStd:
+                  type: number
+                  description: Periodicals Service Standard
+                PkgSvcStd:
+                  type: number
+                  description: Package Services Service Standard
+                PriSvcStd:
+                  type: number
+                  description: Priority Mail Service Standard
+                PFCSvcStd:
+                  type: number
+                  description: Presort First-Class Mail Service Standard
+          messages:
+            type: array
+            description: Extra information provided to provide context to the response.
+            items:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: Text code describing the response information.
+                detail:
+                  type: string
+                  description: Detailed text describing the response information.
+          unsupportedZIPCodes:
+            type: array
+            description: List of all unsupported ZIP codes provided in the `originZIPCode` and `destinationZIPCode` parameters.
+            items:
+              type: string
+              pattern: "^\\d{3}$|^\\d{5}$"
+          exemptOriginZIPCodes:
+            type: array
+            description: List of all exempt origin ZIP codes provided in the `originZIPCode` parameter. ZIP codes can be exempt on origin, destination, or both.
+            items:
+              type: string
+              pattern: "^\\d{3}$|^\\d{5}$"
+          exemptDestinationZIPCodes:
+            type: array
+            description: List of all exempt destination ZIP codes provided in the `destinationZIPCode` parameter. ZIP codes can be exempt on origin, destination, or both.
+            items:
+              type: string
+              pattern: "^\\d{3}$|^\\d{5}$"
+    Zip5CodesResponse:
+        type: object
+        properties:
+          originZIPCodes:
+            type: array
+            description: origin ZIPCodes
+            items:
+              type: string
+              pattern: "^\\d{5}$"
+              description: 5-digit origin ZIP codes
+          destinationZIPCodes:
+            type: array
+            description: destination ZIPCodes
+            items:
+              type: string
+              pattern: "^\\d{5}$"
+              description: 5-digit destination ZIP codes
+    ErrorMessage:
+      title: Error
+      type: object
+      properties:
+        apiVersion:
+          type: string
+          description: The version of the API that was used and that raised the error.
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: The error status code that has been returned in response to the request.
+            message:
+              type: string
+              description: A human-readable message describing the error.
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status code response returned to the client.
+                  code:
+                    type: string
+                    description: An internal subordinate code used for error diagnosis.
+                  title:
+                    type: string
+                    description: A human-readable title that identifies the error.
+                  detail:
+                    type: string
+                    description: A human-readable description of the error that occurred.
+                  source:
+                    type: object
+                    properties:
+                      parameter:
+                        type: string
+                        description: The input in the request which caused an error.
+                      example:
+                        type: string
+                        description: An example of a valid value for the input parameter.
+                    additionalProperties: true
+                    description: The element that is suspected of originating the error.  Helps to pinpoint the problem.
+                additionalProperties: true
+          additionalProperties: true
+          description: The high-level error that has occurred as indicated by the status code.
+      additionalProperties: true
+      description: Standard error message response.
+  headers:
+    Accept-Patch:
+      description: Specifies the patch document formats accepted by the server.
+      style: simple
+      explode: false
+      schema:
+        type: string
+      example: "Accept-Patch: application/json-patch+json"
+    WWWAuthenticate:
+      description: Hint to the client application which security scheme to authorize a resource request.
+      required: false
+      schema:
+        type: string
+        example: "WWW-Authenticate: Bearer realm=\"https://api.usps.com\""
+    RetryAfter:
+      description: Indicate to the client application a time after which they can retry a resource request.
+      required: false
+      schema:
+        type: string
+        example: "Retry-After: 30"
+  examples: 
+    Zip5CodesExample:
+      value:
+        originZIPs: ["10001", "30301", "94105"]
+        destinationZIPs: ["60601", "73301", "80202"]
+    DirectoryOfServiceStandards:
+      value:
+        metadata:
+          totalCount: 100
+          page: 1
+          totalPages: 4
+          offset: 0
+          limit: 25
+          links:
+            self:
+              href: "https://apis.usps.com/service-standards-directory/v3/reporter"
+              method: "POST"
+              body:
+                originZIP: "230"
+                destinationZIP: "330"
+                responseFormat: "3D_BASE"
+                mailClass: "PERIODICALS"
+                offset: 0
+                limit: 25
+                returnUnsupportedZIPCodes: false
+            next:
+              href: "https://apis.usps.com/service-standards-directory/v3/reporter"
+              method: "POST"
+              body:
+                originZIP: "230"
+                destinationZIP: "330"
+                responseFormat: "3D_BASE"
+                mailClass: "PERIODICALS"
+                offset: 25
+                limit: 25
+                returnUnsupportedZIPCodes: false
+            previous: null
+            first:
+              href: "https://apis.usps.com/service-standards-directory/v3/reporter"
+              method: "POST"
+              body:
+                originZIP: "230"
+                destinationZIP: "330"
+                responseFormat: "3D_BASE"
+                mailClass: "PERIODICALS"
+                offset: 0
+                limit: 25
+                returnUnsupportedZIPCodes: false
+            last:
+              href: "https://apis.usps.com/service-standards-directory/v3/reporter"
+              method: "POST"
+              body:
+                originZIP: "230"
+                destinationZIP: "330"
+                responseFormat: "3D_BASE"
+                mailClass: "PERIODICALS"
+                offset: 75
+                limit: 25
+                returnUnsupportedZIPCodes: false
+        publishDate: "2025-09-19"
+        effectiveDate: "2025-09-19"
+        standards:
+          - originZIPCode: "230"
+            destinationZIPCode: "330"
+            FCMSvcStd: 2
+            GAHSvcStd: 3
+            GALSvcStd: 2
+            MktSvcStd: 4
+            PerSvcStd: 3
+            PkgSvcStd: 5
+            PriSvcStd: 2
+            PFCSvcStd: 2
+        messages: []
+        unsupportedZIPCodes: []
+        exemptOriginZIPCodes: []
+        exemptDestinationZIPCodes: []
+  securitySchemes:
+    OAuth:
+      type: oauth2
+      description: The specified APIs accept an access token formatted as a JSON Web Token. The relative path to the OAuth2 version 3 API which supplies this access token is provided below for reference.
+      flows:
+        clientCredentials:
+          tokenUrl: /oauth2/v3/token
+          scopes:
+            service-standards-directory: get service standards directory

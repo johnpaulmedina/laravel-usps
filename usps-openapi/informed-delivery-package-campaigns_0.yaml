@@ -1,0 +1,1101 @@
+---
+openapi: 3.0.0
+info:
+  title: Informed Delivery Package Campaigns
+  description: |   
+    Contact Us: [USPS Informed Delivery API Support](mailto:uspsinformeddeliveryapi@usps.gov) | [Terms of Service](https://about.usps.com/termsofuse.htm)
+    
+    This API allows users to manage interactive Informed Delivery Package Campaigns. Refer to the [Informed Delivery API PostalPro](https://postalpro.usps.com/idapi) page for more information.  Informed Delivery campaigns allow shippers to tie their physical packages to interactive Informed Delivery campaigns to be displayed in the Informed Delivery Daily Digest email, the Informed Delivery Consumer Portal website, and Informed Delivery mobile application during the campaign duration. The endpoints available in this API allow shippers to do the following:
+
+      - Create a new Informed Delivery package campaign (NON-SEQ)
+      - Edit or cancel a previously submitted Informed Delivery package campaign
+      - View details on all Informed Delivery package campaigns for a given CRID
+      - View details on a single Informed Delivery package campaign
+      - Add IMpbs to NON-SEQ Informed Delivery package campaigns
+      
+    When setting up a new Informed Delivery package campaign, shippers will need to provide a start date and end date for the campaign, Ride-along image to be displayed as part of the Informed Delivery digital campaign (provided in base64 format), as well as a Target URL that Informed Delivery users will be taken to when clicking on the package campaign hyperlink or image.
+
+    To set up a new Informed Delivery package campaign, shippers will first submit their campaign details via one endpoint to create the “shell” campaign and then add package IMpbs to the campaign via another endpoint.
+
+    To gain access to the ID APIs for a given CRID, shippers will need to undergo an onboarding process with the Informed Delivery Program Office. At the outset of this onboarding, shippers will need to have an Apigee client application created in the Customer Onboarding Portal (COP) that has access to the Informed Delivery Package Campaigns API product for CRIDs that they have been given access to. Informed Delivery Shipper Campaign Portal access (available in the BCG) is a pre-requisite for accessing the Informed Delivery Package Campaign API.
+
+ 
+  version: 1.0.1
+  x-reviewed-on: 2025-12-10
+  x-updated-on: 2026-01-13
+servers:
+- url: https://apis.usps.com/informed-delivery-package-campaigns
+  description: Production Environment Endpoint
+security:
+ - OAuth:
+    - campaigns
+paths:
+  /campaigns/{CRID}:
+    post:
+      tags:
+      - Resources
+      summary: Create an Informed Delivery package campaign
+      description: Create a new Informed Delivery package campaign
+      operationId: post-campaigns
+      parameters:
+      - name: CRID
+        in: path
+        description: The Package campaign submitter's Customer Registration ID (CRID).
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PackageCampaign'
+        required: true
+      responses:
+        "201":
+          description: Created - Location Header has Campaign Detail API URL
+          headers:
+            Location:
+              style: simple
+              explode: false
+              schema:
+                type: string
+                example: /campaigns/v1
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackageCampaign'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Campaign Duplicate:
+                  $ref: '#/components/examples/campaignDuplicate'
+        default:
+          description: An unanticipated error has occurred.
+      security:
+      - OAuth:
+        - campaigns
+    get:
+      tags:
+      - Resources
+      summary: Search all package campaigns for Submitter CRID
+      description: Search, filter, sort, and paginate package campaigns for a given Submitter CRID
+      operationId: get-campaigns
+      parameters:
+        - name: CRID
+          in: path
+          description: The campaign submitter's Customer Registration ID (CRID).
+          required: true
+          style: simple
+          explode: true
+          schema:
+            type: string
+        - name: offset
+          in: query
+          required: false
+          description: Number of records to skip before returning results. This field must be either be 0 or be a multiple of the limit variable (e.g., is limit is 10, offset can be 0, 10, 20, etc.). If no offset parameter is included at all, a default of 0 will be used.
+          schema:
+            type: integer
+            default: 0
+            minimum: 0            
+        - name: limit
+          in: query
+          required: false
+          description: Number of results per page. This field must be a number between 1 and 1000. If no limit parameter is included at all, a default of 100 will be used.
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 1000          
+        - name: sort
+          in: query
+          required: false
+          description: Sorting order for results. To use this, an integrator can input any column that they would like to sort by (e.g., sort=brandDisplayName,desc). An integrator can indicate either an ascending or descending order by inputting asc or desc after the field name. If asc or desc is not included, then the field will be sorted ascending by default. If no sort parameter is included at all, the response will be sorted by lastModifiedDatetime,desc by default. 
+          schema:
+            type: string
+        - name: ezsearch
+          in: query
+          required: false
+          description: This filter will do a "contains" search across the Campaign Grouping Code, Campaign Code, Brand Display Name, and Campaign Title fields. For example inputting "Sale" will return any campaign for the CRID with a Campaign Grouping Code, Campaign Title, Campaign Code, or Brand Display Name that contains the word "Sale".
+          schema:
+            type: string
+        - name: barcodeCount
+          in: query
+          required: false
+          description: |-
+            Number of packages associated with a campaign.
+          schema:
+            type: number
+        - name: brandDisplayName
+          in: query
+          required: false
+          description: User defined field that is placed on Informed Delivery's UIs when campaign is displayed.
+          schema:
+            type: string
+        - name: campaignCode
+          in: query
+          required: false
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.
+          schema:
+            type: string
+        - name: campaignGroupingCode
+          in: query
+          required: false
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.
+          schema:
+            type: string
+        - name: MID
+          in: query
+          required: false
+          description: "The Mailer ID associated with the campaign."
+          schema:
+            type: string
+        - name: campaignTitle
+          in: query
+          required: false
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.
+          schema:
+            type: string
+        - name: createdDatetime
+          in: query
+          required: false
+          description: Date of initial campaign creation. For this parameter to work correctly, it must be used in conjunction with a >, >=, <, or <= operator (e.g, "createdDatetime>2025-07-05").
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: false
+          description: Last day campaign will be displayed
+          schema:
+            type: string
+            format: date
+        - name: lastModifiedDatetime
+          in: query
+          required: false
+          description: Date of last update made to campaign, inclusive of status changes that occur when a campaign activates or completes. For this parameter to work correctly, it must be used in conjunction with a >, >=, <, or <= operator (e.g, "lastModifiedDatetime>2025-07-05").
+          schema:
+            type: string
+            format: date
+        - name: mailOwnerCRID
+          in: query
+          required: false
+          description: Customer Registration ID (CRID) of the Mail Owner associated with the Informed Delivery campaign.
+          schema:
+            type: string
+        - name: mailOwnerName
+          in: query
+          required: false
+          description: Name of the Mail Owner associated with the Informed Delivery campaign.
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          required: false
+          description: First day campaign will be displayed
+          schema:
+            type: string
+            format: date
+        - name: status
+          in: query
+          required: false
+          description: "Status of campaign - possible values include Submitted, Active, Complete, Inactive, Cancelled, and Deleted"
+          schema:
+            type: string
+            enum: [SUBMITTED,ACTIVE,COMPLETE,CANCELLED,DELETED,INACTIVE]
+        - name: submittedDatetime
+          in: query
+          required: false
+          description: Date of initial campaign submission. For this parameter to work correctly, it must be used in conjunction with a >, >=, <, or <= operator (e.g, "submittedDatetime>2025-07-05").
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignDetailsResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryErrorResponse'
+              examples:
+                Campaign Invalid Parameter:
+                  $ref: '#/components/examples/queryStringInvalidParameter'  
+                Campaign Invalid Sort Value:
+                  $ref: '#/components/examples/queryStringInvalidSortValue'                
+      security:
+      - OAuth:
+        - campaigns
+  /campaigns/{CRID}/{campaignID}:
+    get:
+      tags:
+        - Resources
+      summary: Return a single Informed Delivery package campaign
+      description: Retrieve details of a single Informed Delivery package campaign by CRID and campaign ID
+      operationId: get-single-package-campaign
+      parameters:
+        - name: CRID
+          in: path
+          description: The campaign submitter's Customer Registration ID (CRID).
+          required: true
+          style: simple
+          explode: true
+          schema:
+            type: string
+        - name: campaignID
+          in: path
+          description: Unique identifier for the campaign.
+          required: true
+          style: simple
+          explode: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+                schema:
+                  $ref: '#/components/schemas/SinglePackageCampaignResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryErrorResponse'
+              examples:
+                Campaign ID Invalid for CRID:
+                  $ref: '#/components/examples/invalidCampaignIDforSubmitterCRID'                 
+      security:
+      - OAuth:
+        - campaigns
+    put:
+      tags:
+      - Resources
+      summary: Edit an Informed Delivery package campaign
+      description: Edit a previously existing Informed Delivery package campaign
+      operationId: put-package-campaigns
+      parameters:
+      - name: CRID
+        in: path
+        description: The Package campaign submitter's Customer Registration ID (CRID).
+        required: true
+        schema:
+          type: string
+      - name: campaignID
+        in: path
+        description: Unique identifier for the campaign.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditPackageCampaign'
+        required: true
+      responses:
+        "200":
+          description: Campaign successfully updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditPackageCampaignResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Campaign Duplicate:
+                  $ref: '#/components/examples/campaignDuplicate'      
+                Campaign ID Invalid for CRID:
+                  $ref: '#/components/examples/invalidCampaignIDforSubmitterCRID'                      
+      security:
+      - OAuth:
+        - campaigns
+    delete:
+      tags:
+      - Resources
+      summary: Cancel an Informed Delivery package campaign
+      description: Cancel a previously existing Informed Delivery package campaign
+      operationId: delete-package-campaigns
+      parameters:
+      - name: CRID
+        in: path
+        description: The Package campaign submitter's Customer Registration ID (CRID).
+        required: true
+        schema:
+          type: string
+      - name: campaignID
+        in: path
+        description: Unique identifier for the campaign.
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Successfully Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelPackageCampaignResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Campaign Duplicate:
+                  $ref: '#/components/examples/cancelIneligible'   
+                Campaign ID Invalid for CRID:
+                  $ref: '#/components/examples/invalidCampaignIDforSubmitterCRID'                     
+      security:
+      - OAuth:
+        - campaigns
+  /campaigns/{CRID}/{campaignID}/pieces:
+    post:
+      tags:
+      - Resources
+      summary: Add tracking numbers to an Informed Delivery package campaign
+      description: Add tracking numbers to an Informed Delivery package campaign
+      operationId: post-tracking-number-campaigns
+      parameters:
+      - name: CRID
+        in: path
+        description: The Package campaign submitter's Customer Registration ID (CRID).
+        required: true
+        schema:
+          type: string
+      - name: campaignID
+        in: path
+        description: Unique identifier for the campaign.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrackingNumberRequest'
+        required: true
+      responses:
+        "201":
+          description: Success with <= 25 tracking numbers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackingNumberSuccessResponse'
+        "207":
+          description: Partial success, only tracking number-level errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackingNumberPartialSuccessResponse'
+              examples:
+                Partial Success:
+                  $ref: '#/components/examples/trackingNumbersPartialSuccess'                 
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ErrorMessage'
+                - $ref: '#/components/schemas/TrackingNumberError'
+              examples:
+                Campaign Duplicate:
+                  $ref: '#/components/examples/invalidCampaignIDforSubmitterCRID'     
+                Campaign Ineligible for Adding Tracking Numbers:
+                  $ref: '#/components/examples/campaignNotEligibleForAddingTrackingNumbers'  
+                Tracking Number In Campaign:
+                  $ref: '#/components/examples/trackingNumberInCampaign'    
+                Tracking Number Invalid Format:
+                  $ref: '#/components/examples/trackingNumberInvalidFormat'                
+      security:
+      - OAuth:
+        - campaigns
+components:
+  schemas:
+    PackageCampaign:
+      required:
+      - MID
+      - submitterName
+      - mailOwnerCRID
+      - mailOwnerName
+      - campaignCode
+      - campaignGroupingCode
+      - campaignTitle
+      - brandDisplayName
+      - startDate
+      - endDate
+      - targetUrl
+      - rideAlong
+      type: object
+      properties:
+        campaignID:
+          type: string
+          description: Unique identifier for the campaign.          
+          readOnly: true
+        MID:
+          type: string
+          description: "The Mailer ID associated with the campaign."
+        submitterName:
+          type: string
+          description: The campaign submitter's Name.
+        submitterCRID:
+          type: string
+          description: The campaign submitter's Customer Registration ID (CRID).
+          readOnly: true
+        mailOwnerCRID:
+          type: string
+          description: Customer Registration ID (CRID) of the Mail Owner associated with the Informed Delivery campaign.
+        mailOwnerName:
+          type: string
+          description: Name of the Mail Owner associated with the Informed Delivery campaign.
+        campaignCode:
+          type: string
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.
+        campaignGroupingCode:
+          type: string
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.
+        campaignTitle:
+          type: string
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.
+        brandDisplayName:
+          type: string
+          description: User defined field that is placed on Informed Delivery's UIs when campaign is displayed.
+        startDate:
+          type: string
+          description: First day campaign will be displayed
+          format: date
+        endDate:
+          type: string
+          description: Last day campaign will be displayed
+          format: date
+        targetUrl:
+          type: string
+          description: The URL that users are redirected to when clicking on the Ridealong image or Learn More link for a campaign. This field is required.
+        rideAlong:
+          type: string
+          description: "The image that is displayed for packages matched with a package campaign. When clicked, this image will take users to the Target URL of the campaign. This field is required."
+          format: byte
+        addBarcode:
+          type: boolean
+          description: Boolean that gives information on whether a campaign is eligible for packages added to it. This flag will be true only if the campaign has an End Date in the future.
+          readOnly: true
+        barcodeCount:
+          type: number
+          description: Number of packages associated with the campaign.
+          readOnly: true
+        cancel:
+          type: boolean
+          description: Boolean that gives information on whether a campaign is eligible for cancellation. This flag will be true only if the campaign is in an Active status.
+          readOnly: true
+        createdDatetime:
+          type: string
+          description: Timestamp of initial campaign creation. This timestamp will be returned in UTC.
+          readOnly: true
+          format: date-time          
+        delete:
+          type: boolean
+          description: "Boolean that gives information on whether a campaign is eligible for deletion. This flag will be true only if the campaign is in a Submitted or Inactive status."
+          readOnly: true
+        fullEdit:
+          type: boolean
+          description: 'Boolean that gives information on whether a campaign is eligible for edit inclusive of the campaign''s MID. This flag will be true only if the campaign is in a Submitted and does not have associated packages. '
+          readOnly: true
+        lastModifiedDatetime:
+          type: string
+          format: date-time          
+          description: "Timestamp of last update made to campaign, inclusive of status changes that occur when a campaign activates or completes. This timestamp will be returned in UTC."
+          readOnly: true
+        limitedEdit:
+          type: boolean
+          description: "Boolean that gives information on whether a campaign is eligible for edit, not inclusive of the campaign's MID. This flag will be true only if the campaign is in a Submitted status and already has associated packages."
+          readOnly: true
+        noEdit:
+          type: boolean
+          description: "Boolean that gives information on whether a campaign is not eligible for edit. This flag will be true if the campaign has an Active, Complete, Cancelled, or Deleted status."
+          readOnly: true
+        status:
+          type: string
+          description: "Status of campaign - possible values include Submitted, Active, Complete, Inactive, Cancelled, and Deleted"
+          readOnly: true
+        submittedDatetime:
+          type: string
+          description: Timestamp of initial campaign submission. This timestamp will be returned in UTC.
+          readOnly: true
+          format: date-time          
+      additionalProperties: false
+    CancelPackageCampaignResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Status message indicating the campaign was successfully deleted.
+          example: Successfully Deleted
+    TrackingNumberRequest:
+      type: object
+      properties:
+        trackingNumbers:
+          type: string
+          description: A string containing tracking numbers to be added to the campaign.
+    TrackingNumberSuccessResponse:
+      type: object
+      properties:
+        trackingNumbers:
+          type: array
+          items:
+            type: object
+            properties:
+              trackingNumber:
+                type: string
+                description: The tracking number successfully added to the campaign.
+                example: "9407808205497922910253"
+              pieceID:
+                type: integer
+                description: The unique pieceID of the tracking number for the campaign. This pieceID will be unique if a tracking number is added to multiple campaigns. The pieceID will be non-null if the tracking number was successfully added to the package campaign.
+                example: 12341521
+    TrackingNumberPartialSuccessResponse:
+      type: object
+      properties:
+        trackingNumbers:
+          type: array
+          items:
+            type: object
+            properties:
+              trackingNumber:
+                type: string
+                description: The tracking number included in the request.
+                example: "9407808205497922910253"
+              pieceID:
+                type: integer
+                nullable: true
+                description: The unique pieceID of the tracking number for the campaign. This pieceID will be unique if a tracking number is added to multiple campaigns. The pieceID will be non-null if the tracking number was successfully added to the package campaign.
+                example: null
+              errors:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                      description: Title of tracking number-level error associated with the request. If there is a tracking number-level error, that tracking number will not be added to the campaign.
+                      example: "Barcode.InCampaign"
+                    detail:
+                      type: string
+                      description: Details on tracking number-level error associated with the request. If there is a tracking number-level error, that tracking number will not be added to the campaign.
+                      example: "Barcode is already associated with this campaign."
+    EditPackageCampaign:
+      type: object
+      properties:
+        MID:
+          type: string
+          description: "The Mailer ID associated with the campaign."        
+        mailOwnerCRID:
+          type: string
+          description: Customer Registration ID (CRID) of the Mail Owner associated with the Informed Delivery campaign.     
+        mailOwnerName:
+          type: string
+          description: Name of the Mail Owner associated with the Informed Delivery campaign.          
+        campaignCode:
+          type: string
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.          
+        campaignGroupingCode:
+          type: string
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.          
+        campaignTitle:
+          type: string
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.          
+        brandDisplayName:
+          type: string
+          description: User defined field that is placed on Informed Delivery's UIs when campaign is displayed.
+        startDate:
+          type: string
+          description: First day campaign will be displayed          
+          format: date
+        endDate:
+          type: string
+          description: Last day campaign will be displayed          
+          format: date
+        targetUrl:
+          type: string
+          description: The URL that users are redirected to when clicking on the Ridealong image or Learn More link for a campaign. This field is required.          
+        rideAlong:
+          type: string
+          description: "The image that is displayed for packages matched with a package campaign. When clicked, this image will take users to the Target URL of the campaign. This field is required."          
+    EditPackageCampaignResponse:
+      type: object
+      properties:
+        campaignID:
+          type: string
+          description: Unique identifier for the campaign.          
+        MID:
+          type: string
+          description: "The Mailer ID associated with the campaign."      
+        submitterName:
+          type: string
+          description: The campaign submitter's Name.          
+        submitterCRID:
+          type: string
+          description: The campaign submitter's Customer Registration ID (CRID).         
+        mailOwnerCRID:
+          type: string
+          description: Customer Registration ID (CRID) of the Mail Owner associated with the Informed Delivery campaign.          
+        mailOwnerName:
+          type: string
+          description: Name of the Mail Owner associated with the Informed Delivery campaign.          
+        campaignCode:
+          type: string
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.          
+        campaignGroupingCode:
+          type: string
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.          
+        campaignTitle:
+          type: string
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.          
+        brandDisplayName:
+          type: string
+          description: User defined field that is placed on Informed Delivery's UIs when campaign is displayed.
+        startDate:
+          type: string
+          description: First day campaign will be displayed          
+          format: date
+        endDate:
+          type: string
+          description: Last day campaign will be displayed          
+          format: date
+        targetUrl:
+          type: string
+          description: The URL that users are redirected to when clicking on the Ridealong image or Learn More link for a campaign. This field is required.          
+        rideAlong:
+          type: string
+          description: "The image that is displayed for packages matched with a package campaign. When clicked, this image will take users to the Target URL of the campaign. This field is required."          
+        addBarcode:
+          type: boolean
+          description: Boolean that gives information on whether a campaign is eligible for packages added to it. This flag will be true only if the campaign has an End Date in the future.          
+        barcodeCount:
+          type: number
+          description: Number of packages associated with the campaign.          
+        cancel:
+          type: boolean
+          description: Boolean that gives information on whether a campaign is eligible for cancellation. This flag will be true only if the campaign is in an Active status.          
+        createdDatetime:
+          type: string
+          description: Timestamp of initial campaign creation. This timestamp will be returned in UTC. 
+          format: date-time          
+        delete:
+          type: boolean
+          description: "Boolean that gives information on whether a campaign is eligible for deletion. This flag will be true only if the campaign is in a Submitted or Inactive status."          
+        fullEdit:
+          type: boolean
+          description: 'Boolean that gives information on whether a campaign is eligible for edit inclusive of the campaign''s MID. This flag will be true only if the campaign is in a Submitted and does not have associated packages. '          
+        lastModifiedDatetime:
+          type: string
+          description: "Timestamp of last update made to campaign, inclusive of status changes that occur when a campaign activates or completes. This timestamp will be returned in UTC."
+          format: date-time
+        limitedEdit:
+          type: boolean
+          description: "Boolean that gives information on whether a campaign is eligible for edit, not inclusive of the campaign's MID. This flag will be true only if the campaign is in a Submitted status and already has associated packages."          
+        noEdit:
+          type: boolean
+          description: "Boolean that gives information on whether a campaign is not eligible for edit. This flag will be true if the campaign has an Active, Complete, Cancelled, or Deleted status."          
+        status:
+          type: string
+          description: "Status of campaign - possible values include Submitted, Active, Complete, Inactive, Cancelled, and Deleted."          
+        submittedDatetime:
+          type: string
+          description: Timestamp of initial campaign submission. This timestamp will be returned in UTC.
+          format: date-time          
+    CampaignDetailsResponse:
+      type: object
+      properties:
+        campaigns:
+          type: array
+          items:
+            type: object
+            properties:
+              campaignID:
+                type: string
+                description: Unique identifier for the campaign.                   
+              MID:
+                type: string
+                description: "The Mailer ID associated with the campaign."                
+              submitterName:
+                type: string
+                description: The campaign submitter's Name.                
+              submitterCRID:
+                type: string
+                description: The campaign submitter's Customer Registration ID (CRID).                
+              mailOwnerCRID:
+                type: string
+                description: Customer Registration ID (CRID) of the Mail Owner associated with the Informed Delivery campaign.                
+              mailOwnerName:
+                type: string
+                description: Name of the Mail Owner associated with the Informed Delivery campaign.  
+              campaignCode:
+                type: string
+                description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.                
+              campaignGroupingCode:
+                type: string
+                description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.                   
+              campaignTitle:
+                type: string
+                description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.                   
+              brandDisplayName:
+                type: string
+                description: User defined field that is placed on Informed Delivery's UIs when campaign is displayed.                
+              startDate:
+                type: string
+                description: First day campaign will be displayed                
+                format: date
+              endDate:
+                type: string
+                description: Last day campaign will be displayed                
+                format: date
+              addBarcode:
+                type: boolean
+                description: Boolean that gives information on whether a campaign is eligible for packages added to it. This flag will be true only if the campaign has an End Date in the future.      
+              barcodeCount:
+                type: number
+                description: Number of packages associated with the campaign.                
+              cancel:
+                type: boolean
+                description: Boolean that gives information on whether a campaign is eligible for cancellation. This flag will be true only if the campaign is in an Active status.                
+              createdDatetime:
+                type: string
+                description: Timestamp of initial campaign creation. This timestamp will be returned in UTC.   
+                format: date-time                
+              delete:
+                type: boolean
+                description: "Boolean that gives information on whether a campaign is eligible for deletion. This flag will be true only if the campaign is in a Submitted or Inactive status."
+              fullEdit:
+                type: boolean
+                description: 'Boolean that gives information on whether a campaign is eligible for edit inclusive of the campaign''s MID. This flag will be true only if the campaign is in a Submitted and does not have associated packages. '                
+              lastModifiedDatetime:
+                type: string
+                format: date-time                
+                description: "Timestamp of last update made to campaign, inclusive of status changes that occur when a campaign activates or completes. This timestamp will be returned in UTC."   
+              limitedEdit:
+                type: boolean
+                description: "Boolean that gives information on whether a campaign is eligible for edit, not inclusive of the campaign's MID. This flag will be true only if the campaign is in a Submitted status and already has associated packages."                
+              noEdit:
+                type: boolean
+                description: "Boolean that gives information on whether a campaign is not eligible for edit. This flag will be true if the campaign has an Active, Complete, Cancelled, or Deleted status."                
+              status:
+                type: string
+                description: "Status of campaign - possible values include Submitted, Active, Complete, Inactive, Cancelled, and Deleted"                
+              submittedDatetime:
+                type: string
+                description: Timestamp of initial campaign submission. This timestamp will be returned in UTC.
+                format: date-time                
+        metadata:
+          type: object
+          properties:
+            totalCount:
+              type: integer
+              description: The total number of items.              
+            page:
+              type: integer
+              description: The current page number.
+            totalPages:
+              type: integer
+              description: The total number of pages.              
+            limit:
+              type: integer
+              description: The number of items per page.              
+            offset:
+              type: integer
+              description: The offset of the current page.              
+    QueryErrorResponse:
+      type: object
+      properties:
+        apiVersion:
+          type: string
+          description: The version of the API that raised the error.
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: The error status code.
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    description: A title identifying the error.
+                  detail:
+                    type: string
+                    description: A description of the error.
+    SinglePackageCampaignResponse:
+      type: object
+      properties:
+        campaignID:
+          type: string
+          description: Unique identifier for the campaign.             
+        MID:
+          type: string
+          description: "The Mailer ID associated with the campaign."         
+        submitterName:
+          type: string
+          description: The campaign submitter's Name.          
+        submitterCRID:
+          type: string
+          description: The campaign submitter's Customer Registration ID (CRID).          
+        mailOwnerCRID:
+          type: string
+          description: Customer Registration ID (CRID) of the Mail Owner associated with the Informed Delivery campaign.          
+        mailOwnerName:
+          type: string
+          description: Name of the Mail Owner associated with the Informed Delivery campaign.          
+        campaignCode:
+          type: string
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.          
+        campaignGroupingCode:
+          type: string
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.          
+        campaignTitle:
+          type: string
+          description: User defined field that describes the campaign being created. This field is put into the campaign reports created for the campaign.          
+        brandDisplayName:
+          type: string
+          description: User defined field that is placed on Informed Delivery's UIs when campaign is displayed.
+        startDate:
+          type: string
+          description: First day campaign will be displayed          
+          format: date
+        endDate:
+          type: string
+          description: Last day campaign will be displayed          
+          format: date
+        targetUrl:
+          type: string
+          description: The URL that users are redirected to when clicking on the Ridealong image or Learn More link for a campaign. This field is required.          
+        rideAlong:
+          type: string
+          description: "The image that is displayed for packages matched with a package campaign. When clicked, this image will take users to the Target URL of the campaign. This field is required."          
+        addBarcode:
+          type: boolean
+          description: Boolean that gives information on whether a campaign is eligible for packages added to it. This flag will be true only if the campaign has an End Date in the future.          
+        barcodeCount:
+          type: number
+          description: Number of packages associated with the campaign.          
+        cancel:
+          type: boolean
+          description: Boolean that gives information on whether a campaign is eligible for cancellation. This flag will be true only if the campaign is in an Active status.          
+        createdDatetime:
+          type: string
+          description: Timestamp of initial campaign creation. This timestamp will be returned in UTC. 
+          format: date-time
+        delete:
+          type: boolean
+          description: "Boolean that gives information on whether a campaign is eligible for deletion. This flag will be true only if the campaign is in a Submitted or Inactive status."          
+        fullEdit:
+          type: boolean
+          description: 'Boolean that gives information on whether a campaign is eligible for edit inclusive of the campaign''s MID. This flag will be true only if the campaign is in a Submitted and does not have associated packages. '          
+        lastModifiedDatetime:
+          type: string
+          description: "Timestamp of last update made to campaign, inclusive of status changes that occur when a campaign activates or completes. This timestamp will be returned in UTC."
+          format: date-time
+        limitedEdit:
+          type: boolean
+          description: "Boolean that gives information on whether a campaign is eligible for edit, not inclusive of the campaign's MID. This flag will be true only if the campaign is in a Submitted status and already has associated packages."          
+        noEdit:
+          type: boolean
+          description: "Boolean that gives information on whether a campaign is not eligible for edit. This flag will be true if the campaign has an Active, Complete, Cancelled, or Deleted status."          
+        status:
+          type: string
+          description: "Status of campaign - possible values include Submitted, Active, Complete, Inactive, Cancelled, and Deleted"          
+        submittedDatetime:
+          type: string
+          description: Timestamp of initial campaign submission. This timestamp will be returned in UTC.
+          format: date-time
+    ErrorMessage:
+      title: Error
+      type: object
+      properties:
+        apiVersion:
+          type: string
+          description: The version of the API that was used and that raised the error.
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: The error status code that has been returned in response to the request.
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    description: A human-readable title that identifies the error.
+                  detail:
+                    type: string
+                    description: A human-readable description of the error that occurred.
+    TrackingNumberError:
+      title: trackingNumberError
+      type: object
+      properties:
+        trackingNumbers:
+          type: array
+          items:
+            type: object
+            properties:
+              trackingNumber:
+                type: string
+                description: The tracking number included in the request.                   
+                example: "9407808205497922910253"
+              pieceID:
+                type: integer
+                description: The unique pieceID of the tracking number for the campaign. This pieceID will be unique if a tracking number is added to multiple campaigns. The pieceID will be non-null if the tracking number was successfully added to the package campaign.         
+                nullable: true
+                example: 12341521
+              errors:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                      description: Title of tracking number-level error associated with the request. If there is a tracking number-level error, that tracking number will not be added to the campaign.                      
+                      example: "Barcode.InCampaign"
+                    detail:
+                      type: string
+                      description: Details on tracking number-level error associated with the request. If there is a tracking number-level error, that tracing number will not be added to the campaign.                      
+                      example: "Barcode is already associated with this campaign."
+  examples:
+    campaignDuplicate:
+      summary: Duplicate Campaign Error
+      description: Duplicate Campaign Error
+      value:
+        apiVersion: "1.0"
+        error:
+          code: "400"
+          errors:
+          - title: CampaignCode.AlreadyExist
+            detail: Campaign Code with the same Grouping Code and MID has been used previously.
+    cancelIneligible:
+      summary: Cancel Ineligible Error
+      description: Cancel Ineligible Error
+      value:
+        apiVersion: "1.0"
+        error:
+          code: "400"
+          errors:
+          - title: Campaign.CancelInvalid
+            detail: This campaign has already been cancelled. 
+    queryStringInvalidParameter:
+      summary: Invalid Parameter Name
+      description: Invalid Parameter name
+      value:
+        apiVersion: "1.0"
+        error:
+          code: "400"
+          errors:
+            - title: QueryString.InvalidParameter
+              detail: "representativeImage is an invalid parameter name."
+    queryStringInvalidSortValue:
+      summary: Invalid Sort Value
+      description: Invalid Sort Value
+      value:
+        apiVersion: "1.0"
+        error:
+          code: "400"
+          errors:
+            - title: QueryString.InvalidSortValue
+              detail: "Invalid value provided for the sort parameter(s) in the query string."
+    invalidCampaignIDforSubmitterCRID:
+      summary: Invalid Campaign ID for Submitter CRID
+      description: Invalid Campaign ID for Submitter CRID
+      value:
+        apiVersion: "1.0"
+        error:
+          code: "400"
+          errors:
+            - title: PathVariableCampaignID.Invalid
+              detail: "Campaign ID not valid for submitter CRID."   
+    campaignNotEligibleForAddingTrackingNumbers:
+      summary: Campaign Not Eligible For Adding Tracking Numbers
+      description: Campaign Not Eligible For Adding Tracking Numbers
+      value:
+        apiVersion: "1.0"
+        error:
+          code: "400"
+          errors:
+            - title: Campaign.AddBarcodeInvalid
+              detail: Barcodes cannot be added to this campaign. For a campaign to be eligible for adding barcodes, it must be in a Submitted or Active status with an End Date in the future.           
+    trackingNumberInCampaign:
+      summary: Tracking Number Already In Campaign
+      description: Tracking Number Already In Campaign
+      value:
+        trackingNumbers:
+            - trackingNumber: "9407808205497922910253"
+              pieceID: null
+              errors:
+                - title: IMpb.InCampaign
+                  detail: IMpb has previously been added to the campaign.
+    trackingNumberInvalidFormat:
+      summary: Tracking Number Invalid Format
+      description: Tracking Number Invalid Format
+      value:
+        trackingNumbers:
+            - trackingNumber: "94078082054979229102531"
+              pieceID: null
+              errors:
+                - title: Barcode.InvalidLength
+                  detail: IMpb must have 22, 26, 30 or 34 alphanumeric characters.             
+              
+    trackingNumbersPartialSuccess:
+      summary: Tracking Number Partial Success
+      description: Tracking Number Partial Success
+      value:
+        trackingNumbers:
+            - trackingNumber: "9407808205497922910253"
+              pieceID: 2300001
+            - trackingNumber: "9407808205497922910255"
+              pieceID: null
+              errors:
+                - title: IMpb.InCampaign
+                  detail: IMpb has previously been added to the campaign.    
+                  
+  headers:
+    RetryAfter:
+      description: Indicate to the client application a time after which they can retry a resource request.
+      required: false
+      style: simple
+      explode: false
+      schema:
+        type: string
+        example: "Retry-After: 30"
+    WWWAuthenticate:
+      description: Hint to the client application which security scheme to authorize a resource request.
+      required: false
+      style: simple
+      explode: false
+      schema:
+        type: string
+        example: "WWW-Authenticate: Bearer realm=\"https://api.usps.com\""
+  securitySchemes:
+    OAuth:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /oauth2/token
+          scopes:
+            campaigns: read/write access to all campaigns endpoints
