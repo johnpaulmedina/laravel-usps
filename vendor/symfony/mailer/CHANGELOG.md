@@ -1,11 +1,6 @@
 CHANGELOG
 =========
 
-8.0
----
-
- * Remove `TransportFactoryTestCase`, extend `AbstractTransportFactoryTestCase` instead
-
 7.4
 ---
 

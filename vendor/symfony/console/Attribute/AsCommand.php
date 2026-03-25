@@ -13,9 +13,11 @@ namespace Symfony\Component\Console\Attribute;
 
 /**
  * Service tag to autoconfigure commands.
+ *
+ * @final since Symfony 7.3
  */
 #[\Attribute(\Attribute::TARGET_CLASS)]
-final class AsCommand
+class AsCommand
 {
     /**
      * @param string      $name        The name of the command, used when calling it (i.e. "cache:clear")

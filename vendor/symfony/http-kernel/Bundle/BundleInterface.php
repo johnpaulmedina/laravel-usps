@@ -24,20 +24,26 @@ interface BundleInterface
 {
     /**
      * Boots the Bundle.
+     *
+     * @return void
      */
-    public function boot(): void;
+    public function boot();
 
     /**
      * Shutdowns the Bundle.
+     *
+     * @return void
      */
-    public function shutdown(): void;
+    public function shutdown();
 
     /**
      * Builds the bundle.
      *
      * It is only ever called once when the cache is empty.
+     *
+     * @return void
      */
-    public function build(ContainerBuilder $container): void;
+    public function build(ContainerBuilder $container);
 
     /**
      * Returns the container extension that should be implicitly loaded.

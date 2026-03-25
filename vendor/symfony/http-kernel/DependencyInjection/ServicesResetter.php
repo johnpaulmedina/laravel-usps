@@ -19,8 +19,10 @@ use Symfony\Component\VarExporter\LazyObjectInterface;
  *
  * @author Alexander M. Turek <me@derrabus.de>
  * @author Nicolas Grekas <p@tchwork.com>
+ *
+ * @final since Symfony 7.2
  */
-final class ServicesResetter implements ServicesResetterInterface
+class ServicesResetter implements ServicesResetterInterface
 {
     /**
      * @param \Traversable<string, object>   $resettableServices
@@ -43,7 +45,7 @@ final class ServicesResetter implements ServicesResetterInterface
                 continue;
             }
 
-            if (new \ReflectionClass($service)->isUninitializedLazyObject($service)) {
+            if (\PHP_VERSION_ID >= 80400 && (new \ReflectionClass($service))->isUninitializedLazyObject($service)) {
                 continue;
             }
 

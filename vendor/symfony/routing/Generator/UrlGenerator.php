@@ -150,7 +150,8 @@ class UrlGenerator implements UrlGeneratorInterface, ConfigurableRequirementsInt
                 $queryParameters = $parameters['_query'];
                 unset($parameters['_query']);
             } else {
-                throw new InvalidParameterException('Parameter "_query" must be an array of query parameters.');
+                trigger_deprecation('symfony/routing', '7.4', 'Parameter "_query" is reserved for passing an array of query parameters. Passing a scalar value is deprecated and will throw an exception in Symfony 8.0.');
+                // throw new InvalidParameterException('Parameter "_query" must be an array of query parameters.');
             }
         }
 

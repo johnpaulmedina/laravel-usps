@@ -17,6 +17,8 @@ use Symfony\Component\Console\Formatter\OutputFormatterInterface;
  * OutputInterface is the interface implemented by all Output classes.
  *
  * @author Fabien Potencier <fabien@symfony.com>
+ *
+ * @method bool isSilent()
  */
 interface OutputInterface
 {
@@ -61,8 +63,6 @@ interface OutputInterface
      * @return self::VERBOSITY_*
      */
     public function getVerbosity(): int;
-
-    public function isSilent(): bool;
 
     /**
      * Returns whether verbosity is quiet (-q).

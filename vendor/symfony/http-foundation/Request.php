@@ -289,6 +289,18 @@ class Request
             return self::createRequestFromFactory($_GET, $_POST, [], $_COOKIE, $_FILES, $_SERVER);
         }
 
+        if (\PHP_VERSION_ID < 80400) {
+            if (!isset($_SERVER['CONTENT_TYPE']) || str_starts_with($_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded')) {
+                $content = file_get_contents('php://input');
+                parse_str($content, $post);
+            } else {
+                $content = null;
+                $post = $_POST;
+            }
+
+            return self::createRequestFromFactory($_GET, $post, [], $_COOKIE, $_FILES, $_SERVER, $content);
+        }
+
         try {
             [$post, $files] = request_parse_body();
         } catch (\RequestParseBodyException) {
@@ -724,6 +736,36 @@ class Request
     public static function getAllowedHttpMethodOverride(): ?array
     {
         return self::$allowedHttpMethodOverride;
+    }
+
+    /**
+     * Gets a "parameter" value from any bag.
+     *
+     * This method is mainly useful for libraries that want to provide some flexibility. If you don't need the
+     * flexibility in controllers, it is better to explicitly get request parameters from the appropriate
+     * public property instead (attributes, query, request).
+     *
+     * Order of precedence: PATH (routing placeholders or custom attributes), GET, POST
+     *
+     * @deprecated since Symfony 7.4, use properties `->attributes`, `query` or `request` directly instead
+     */
+    public function get(string $key, mixed $default = null): mixed
+    {
+        trigger_deprecation('symfony/http-foundation', '7.4', 'Request::get() is deprecated, use properties ->attributes, query or request directly instead.');
+
+        if ($this !== $result = $this->attributes->get($key, $this)) {
+            return $result;
+        }
+
+        if ($this->query->has($key)) {
+            return $this->query->all()[$key];
+        }
+
+        if ($this->request->has($key)) {
+            return $this->request->all()[$key];
+        }
+
+        return $default;
     }
 
     /**
@@ -1228,7 +1270,7 @@ class Request
         $method = strtoupper($method);
 
         if (\in_array($method, ['GET', 'HEAD', 'CONNECT', 'TRACE'], true)) {
-            return $this->method;
+            trigger_deprecation('symfony/http-foundation', '7.4', 'HTTP method override is deprecated for methods GET, HEAD, CONNECT and TRACE; it will be ignored in Symfony 8.0.', $method);
         }
 
         if (self::$allowedHttpMethodOverride && !\in_array($method, self::$allowedHttpMethodOverride, true)) {
@@ -1293,8 +1335,9 @@ class Request
      * @param string|null $mimeType        The mime type to check
      * @param bool        $subtypeFallback Whether to fall back to the subtype if no exact match is found
      */
-    public function getFormat(?string $mimeType, bool $subtypeFallback = false): ?string
+    public function getFormat(?string $mimeType/* , bool $subtypeFallback = false */): ?string
     {
+        $subtypeFallback = 2 <= \func_num_args() ? func_get_arg(1) : false;
         $canonicalMimeType = null;
         if ($mimeType && false !== $pos = strpos($mimeType, ';')) {
             $canonicalMimeType = trim(substr($mimeType, 0, $pos));
@@ -1347,10 +1390,16 @@ class Request
     /**
      * Associates a format with mime types.
      *
+     * @param string          $format    The format to set
      * @param string|string[] $mimeTypes The associated mime types (the preferred one must be the first as it will be used as the content type)
      */
-    public function setFormat(string $format, string|array $mimeTypes): void
+    public function setFormat(?string $format, string|array $mimeTypes): void
     {
+        if (null === $format) {
+            trigger_deprecation('symfony/http-foundation', '7.4', 'Passing "null" as the first argument of "%s()" is deprecated. The argument will be non-nullable in Symfony 8.0.', __METHOD__);
+            $format = '';
+        }
+
         if (null === static::$formats) {
             static::initializeFormats();
         }

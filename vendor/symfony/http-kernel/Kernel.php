@@ -11,6 +11,7 @@
 
 namespace Symfony\Component\HttpKernel;
 
+use Symfony\Component\Config\Builder\ConfigBuilderGenerator;
 use Symfony\Component\Config\ConfigCache;
 use Symfony\Component\Config\Loader\DelegatingLoader;
 use Symfony\Component\Config\Loader\LoaderResolver;
@@ -27,6 +28,7 @@ use Symfony\Component\DependencyInjection\Loader\DirectoryLoader;
 use Symfony\Component\DependencyInjection\Loader\GlobFileLoader;
 use Symfony\Component\DependencyInjection\Loader\IniFileLoader;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
+use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\ErrorHandler\DebugClassLoader;
 use Symfony\Component\Filesystem\Filesystem;
@@ -72,15 +74,15 @@ abstract class Kernel implements KernelInterface, RebootableInterface, Terminabl
      */
     private static array $freshCache = [];
 
-    public const VERSION = '8.0.7';
-    public const VERSION_ID = 80007;
-    public const MAJOR_VERSION = 8;
-    public const MINOR_VERSION = 0;
+    public const VERSION = '7.4.7';
+    public const VERSION_ID = 70407;
+    public const MAJOR_VERSION = 7;
+    public const MINOR_VERSION = 4;
     public const RELEASE_VERSION = 7;
     public const EXTRA_VERSION = '';
 
-    public const END_OF_MAINTENANCE = '07/2026';
-    public const END_OF_LIFE = '07/2026';
+    public const END_OF_MAINTENANCE = '11/2028';
+    public const END_OF_LIFE = '11/2029';
 
     public function __construct(
         protected string $environment,
@@ -284,6 +286,18 @@ abstract class Kernel implements KernelInterface, RebootableInterface, Terminabl
         return $this->container;
     }
 
+    /**
+     * @internal
+     *
+     * @deprecated since Symfony 7.1, to be removed in 8.0
+     */
+    public function setAnnotatedClassCache(array $annotatedClasses): void
+    {
+        trigger_deprecation('symfony/http-kernel', '7.1', 'The "%s()" method is deprecated since Symfony 7.1 and will be removed in 8.0.', __METHOD__);
+
+        file_put_contents(($this->warmupDir ?: $this->getBuildDir()).'/annotations.map', \sprintf('<?php return %s;', var_export($annotatedClasses, true)));
+    }
+
     public function getStartTime(): float
     {
         return $this->debug && null !== $this->startTime ? $this->startTime : -\INF;
@@ -314,6 +328,20 @@ abstract class Kernel implements KernelInterface, RebootableInterface, Terminabl
     public function getCharset(): string
     {
         return 'UTF-8';
+    }
+
+    /**
+     * Gets the patterns defining the classes to parse and cache for annotations.
+     *
+     * @return string[]
+     *
+     * @deprecated since Symfony 7.1, to be removed in 8.0
+     */
+    public function getAnnotatedClassesToCompile(): array
+    {
+        trigger_deprecation('symfony/http-kernel', '7.1', 'The "%s()" method is deprecated since Symfony 7.1 and will be removed in 8.0.', __METHOD__);
+
+        return [];
     }
 
     /**
@@ -703,14 +731,16 @@ abstract class Kernel implements KernelInterface, RebootableInterface, Terminabl
     {
         $env = $this->getEnvironment();
         $locator = new FileLocator($this);
-        $resolver = new LoaderResolver([
+        $resolver = new LoaderResolver(array_merge(class_exists(XmlFileLoader::class) ? [
+            new XmlFileLoader($container, $locator, $env),
+        ] : [], [
             new YamlFileLoader($container, $locator, $env),
             new IniFileLoader($container, $locator, $env),
-            new PhpFileLoader($container, $locator, $env),
+            class_exists(XmlFileLoader::class, false) && class_exists(ConfigBuilderGenerator::class) ? new PhpFileLoader($container, $locator, $env, new ConfigBuilderGenerator($this->getBuildDir())) : new PhpFileLoader($container, $locator, $env),
             new GlobFileLoader($container, $locator, $env),
             new DirectoryLoader($container, $locator, $env),
             new ClosureLoader($container, $env),
-        ]);
+        ]));
 
         return new DelegatingLoader($resolver);
     }
@@ -765,24 +795,95 @@ abstract class Kernel implements KernelInterface, RebootableInterface, Terminabl
 
     public function __serialize(): array
     {
-        return [
-            'environment' => $this->environment,
-            'debug' => $this->debug,
-        ];
+        if (self::class === (new \ReflectionMethod($this, '__sleep'))->class || self::class !== (new \ReflectionMethod($this, '__serialize'))->class) {
+            return [
+                'environment' => $this->environment,
+                'debug' => $this->debug,
+            ];
+        }
+
+        trigger_deprecation('symfony/http-kernel', '7.4', 'Implementing "%s::__sleep()" is deprecated, use "__serialize()" instead.', get_debug_type($this));
+
+        $data = [];
+        foreach ($this->__sleep() as $key) {
+            try {
+                if (($r = new \ReflectionProperty($this, $key))->isInitialized($this)) {
+                    $data[$key] = $r->getValue($this);
+                }
+            } catch (\ReflectionException) {
+                $data[$key] = $this->$key;
+            }
+        }
+
+        return $data;
     }
 
     public function __unserialize(array $data): void
     {
-        $environment = $data['environment'] ?? $data["\0*\0environment"];
-        $debug = $data['debug'] ?? $data["\0*\0debug"];
+        if ($wakeup = self::class !== (new \ReflectionMethod($this, '__wakeup'))->class && self::class === (new \ReflectionMethod($this, '__unserialize'))->class) {
+            trigger_deprecation('symfony/http-kernel', '7.4', 'Implementing "%s::__wakeup()" is deprecated, use "__unserialize()" instead.', get_debug_type($this));
+        }
 
-        if (\is_object($environment) || \is_object($debug)) {
+        if (\in_array(array_keys($data), [['environment', 'debug'], ["\0*\0environment", "\0*\0debug"]], true)) {
+            $environment = $data['environment'] ?? $data["\0*\0environment"];
+            $debug = $data['debug'] ?? $data["\0*\0debug"];
+
+            if (\is_object($environment) || \is_object($debug)) {
+                throw new \BadMethodCallException('Cannot unserialize '.__CLASS__);
+            }
+
+            $this->environment = $environment;
+            $this->debug = $debug;
+
+            if ($wakeup) {
+                $this->__wakeup();
+            } else {
+                $this->__construct($environment, $debug);
+            }
+
+            return;
+        }
+
+        trigger_deprecation('symfony/http-kernel', '7.4', 'Passing more than just key "environment" and "debug" to "%s::__unserialize()" is deprecated, populate properties in "%s::__unserialize()" instead.', self::class, get_debug_type($this));
+
+        \Closure::bind(function ($data) use ($wakeup) {
+            foreach ($data as $key => $value) {
+                $this->{("\0" === $key[0] ?? '') ? substr($key, 1 + strrpos($key, "\0")) : $key} = $value;
+            }
+
+            if ($wakeup) {
+                $this->__wakeup();
+            } else {
+                if (\is_object($this->environment) || \is_object($this->debug)) {
+                    throw new \BadMethodCallException('Cannot unserialize '.__CLASS__);
+                }
+
+                $this->__construct($this->environment, $this->debug);
+            }
+        }, $this, static::class)($data);
+    }
+
+    /**
+     * @deprecated since Symfony 7.4, will be replaced by `__serialize()` in 8.0
+     */
+    public function __sleep(): array
+    {
+        trigger_deprecation('symfony/http-kernel', '7.4', 'Calling "%s::__sleep()" is deprecated, use "__serialize()" instead.', get_debug_type($this));
+
+        return ['environment', 'debug'];
+    }
+
+    /**
+     * @deprecated since Symfony 7.4, will be replaced by `__unserialize()` in 8.0
+     */
+    public function __wakeup(): void
+    {
+        trigger_deprecation('symfony/http-kernel', '7.4', 'Calling "%s::__wakeup()" is deprecated, use "__unserialize()" instead.', get_debug_type($this));
+
+        if (\is_object($this->environment) || \is_object($this->debug)) {
             throw new \BadMethodCallException('Cannot unserialize '.__CLASS__);
         }
 
-        $this->environment = $environment;
-        $this->debug = $debug;
-
-        $this->__construct($environment, $debug);
+        $this->__construct($this->environment, $this->debug);
     }
 }

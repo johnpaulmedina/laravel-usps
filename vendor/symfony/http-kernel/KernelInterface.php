@@ -20,6 +20,10 @@ use Symfony\Component\HttpKernel\Bundle\BundleInterface;
  *
  * It manages an environment made of application kernel and bundles.
  *
+ * @method string|null getShareDir() Returns the share directory - not implementing it is deprecated since Symfony 7.4.
+ *                                   This directory should be used to store data that is shared between all front-end servers; this typically fits application caches.
+ *                                   `null` should be returned if the application shall not use a share directory.
+ *
  * @author Fabien Potencier <fabien@symfony.com>
  */
 interface KernelInterface extends HttpKernelInterface
@@ -33,20 +37,26 @@ interface KernelInterface extends HttpKernelInterface
 
     /**
      * Loads the container configuration.
+     *
+     * @return void
      */
-    public function registerContainerConfiguration(LoaderInterface $loader): void;
+    public function registerContainerConfiguration(LoaderInterface $loader);
 
     /**
      * Boots the current kernel.
+     *
+     * @return void
      */
-    public function boot(): void;
+    public function boot();
 
     /**
      * Shutdowns the kernel.
      *
      * This method is mainly useful when doing functional testing.
+     *
+     * @return void
      */
-    public function shutdown(): void;
+    public function shutdown();
 
     /**
      * Gets the registered bundle instances.
@@ -122,14 +132,6 @@ interface KernelInterface extends HttpKernelInterface
      * in the "share directory" ({@see KernelInterface::getShareDir()}).
      */
     public function getBuildDir(): string;
-
-    /**
-     * Returns the share directory.
-     *
-     * This directory should be used to store data that is shared between all front-end servers.
-     * This typically fits application caches.
-     */
-    public function getShareDir(): ?string;
 
     /**
      * Gets the log directory.
