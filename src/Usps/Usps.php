@@ -33,8 +33,8 @@ class Usps
     public function validate(array $request): array
     {
         $verify = new AddressVerify(
-            $this->config['client_id'] ?? '',
-            $this->config['client_secret'] ?? ''
+            $this->config['client_id'],
+            $this->config['client_secret']
         );
 
         $address = new Address;
@@ -79,8 +79,8 @@ class Usps
     public function addressLookup(array $request): array
     {
         $lookup = new AddressVerify(
-            $this->config['client_id'] ?? '',
-            $this->config['client_secret'] ?? ''
+            $this->config['client_id'],
+            $this->config['client_secret']
         );
 
         $address = new Address;
@@ -101,8 +101,8 @@ class Usps
     public function cityStateLookup(string $zipCode): array
     {
         $lookup = new CityStateLookup(
-            $this->config['client_id'] ?? '',
-            $this->config['client_secret'] ?? ''
+            $this->config['client_id'],
+            $this->config['client_secret']
         );
 
         return $lookup->lookup($zipCode);
@@ -115,8 +115,8 @@ class Usps
     public function zipCodeLookup(array $request): array
     {
         $lookup = new ZipCodeLookup(
-            $this->config['client_id'] ?? '',
-            $this->config['client_secret'] ?? ''
+            $this->config['client_id'],
+            $this->config['client_secret']
         );
 
         $address = new Address;
@@ -136,7 +136,7 @@ class Usps
 
     public function tracking(): Tracking
     {
-        return new Tracking($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new Tracking($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -145,7 +145,7 @@ class Usps
 
     public function labels(): Labels
     {
-        return new Labels($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new Labels($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -154,7 +154,7 @@ class Usps
 
     public function internationalLabels(): InternationalLabels
     {
-        return new InternationalLabels($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new InternationalLabels($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -163,7 +163,7 @@ class Usps
 
     public function domesticPrices(): DomesticPrices
     {
-        return new DomesticPrices($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new DomesticPrices($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -172,7 +172,7 @@ class Usps
 
     public function internationalPrices(): InternationalPrices
     {
-        return new InternationalPrices($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new InternationalPrices($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -181,7 +181,7 @@ class Usps
 
     public function serviceStandards(): ServiceStandards
     {
-        return new ServiceStandards($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new ServiceStandards($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -190,7 +190,7 @@ class Usps
 
     public function serviceStandardsDirectory(): ServiceStandardsDirectory
     {
-        return new ServiceStandardsDirectory($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new ServiceStandardsDirectory($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -199,7 +199,7 @@ class Usps
 
     public function serviceStandardsFiles(): ServiceStandardsFiles
     {
-        return new ServiceStandardsFiles($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new ServiceStandardsFiles($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -208,7 +208,7 @@ class Usps
 
     public function internationalServiceStandards(): InternationalServiceStandards
     {
-        return new InternationalServiceStandards($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new InternationalServiceStandards($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -217,7 +217,7 @@ class Usps
 
     public function locations(): Locations
     {
-        return new Locations($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new Locations($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -226,7 +226,7 @@ class Usps
 
     public function carrierPickup(): CarrierPickup
     {
-        return new CarrierPickup($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new CarrierPickup($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -235,7 +235,7 @@ class Usps
 
     public function containers(): Containers
     {
-        return new Containers($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new Containers($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -244,7 +244,7 @@ class Usps
 
     public function payments(): Payments
     {
-        return new Payments($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new Payments($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -253,7 +253,7 @@ class Usps
 
     public function campaigns(): Campaigns
     {
-        return new Campaigns($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new Campaigns($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -262,7 +262,7 @@ class Usps
 
     public function packageCampaigns(): PackageCampaigns
     {
-        return new PackageCampaigns($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new PackageCampaigns($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -271,7 +271,7 @@ class Usps
 
     public function adjustments(): Adjustments
     {
-        return new Adjustments($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new Adjustments($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -280,7 +280,7 @@ class Usps
 
     public function disputes(): Disputes
     {
-        return new Disputes($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new Disputes($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -289,7 +289,7 @@ class Usps
 
     public function appointments(): Appointments
     {
-        return new Appointments($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new Appointments($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -298,7 +298,7 @@ class Usps
 
     public function shippingOptions(): ShippingOptions
     {
-        return new ShippingOptions($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new ShippingOptions($this->config['client_id'], $this->config['client_secret']);
     }
 
     // -------------------------------------------------------------------------
@@ -307,6 +307,6 @@ class Usps
 
     public function scanForms(): ScanForm
     {
-        return new ScanForm($this->config['client_id'] ?? '', $this->config['client_secret'] ?? '');
+        return new ScanForm($this->config['client_id'], $this->config['client_secret']);
     }
 }

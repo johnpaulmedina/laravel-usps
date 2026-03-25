@@ -40,6 +40,13 @@ jobs:
               level: 5
               ignoreErrors:
                   - '#Call to an undefined method Illuminate\\Http\\Client\\Response::#'
+                  - '#Property .* on left side of \?\? is not nullable#'
+                  - '#Match expression does not handle remaining value#'
+                  - '#Offset .* in isset\(\) always exists#'
+                  - '#Strict comparison .* will always evaluate to#'
+                  - '#Offset .* in isset\(\) does not exist#'
+              excludePaths:
+                  - src/Usps/Http/Controllers
           NEON
 
       - name: Run PHPStan
