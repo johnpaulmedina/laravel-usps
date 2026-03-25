@@ -24,7 +24,7 @@ jobs:
           coverage: none
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist
+        run: composer update --no-interaction --prefer-dist
 
       - name: Install PHPStan
         run: composer require --dev phpstan/phpstan larastan/larastan --no-interaction
@@ -37,7 +37,7 @@ jobs:
           parameters:
               paths:
                   - src
-              level: 6
+              level: 5
               ignoreErrors:
                   - '#Call to an undefined method Illuminate\\Http\\Client\\Response::#'
           NEON

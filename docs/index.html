@@ -50,8 +50,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>Laravel <span>USPS</span> <span class="badge">v13.2</span> <span class="badge badge-green">20 APIs</span></h1>
-        <p class="subtitle">Complete USPS API v3 (OAuth2) for Laravel 10–13 — All 20 API domains, 80+ endpoints</p>
+        <h1>Laravel <span>USPS</span> <span class="badge">v13.3</span> <span class="badge badge-green">20 APIs</span></h1>
+        <p class="subtitle">Complete USPS API v3 (OAuth2) for Laravel 10–13 — 20 API domains, 80+ endpoints, REST routes, input validation</p>
 
         <div class="card">
             <p>The legacy USPS Web Tools XML API was <strong>retired January 2026</strong>. This package uses the new OAuth2-based REST/JSON API at <span class="inline-code">apis.usps.com</span> with automatic token management and per-scope caching.</p>
@@ -108,6 +108,26 @@ php artisan usps:standards 20500 33101
 # Find USPS locations
 php artisan usps:locations 33101 --type=post-office --radius=5</code></pre>
             <p style="margin-top: 8px; color: var(--muted); font-size: 13px;">All commands output formatted tables to the console.</p>
+        </div>
+
+        <h2>REST API Routes</h2>
+        <div class="card">
+            <p style="margin-bottom: 8px;">Publish routes to your app:</p>
+            <pre><code>php artisan vendor:publish --tag=usps-routes</code></pre>
+            <p style="margin-top: 8px; font-size: 13px; color: var(--muted);">27 routes under <span class="inline-code">/api/usps/</span> with Form Request validation. 13 controllers, 26 request classes.</p>
+        </div>
+
+        <h2>Input Validation</h2>
+        <div class="card">
+            <p style="font-size: 13px;">All inputs are automatically normalized and validated:</p>
+            <ul style="font-size: 13px; color: var(--muted); margin-top: 8px; padding-left: 20px;">
+                <li><strong>States</strong> — Full names auto-converted to 2-letter codes (<span class="inline-code">Florida → FL</span>)</li>
+                <li><strong>ZIP codes</strong> — Dashes stripped, ZIP+4 auto-split (<span class="inline-code">20500-0005 → 20500 + 0005</span>)</li>
+                <li><strong>Countries</strong> — Full names to ISO alpha-2 (<span class="inline-code">Canada → CA</span>)</li>
+                <li><strong>Dates</strong> — Auto-normalized to ISO 8601 (<span class="inline-code">YYYY-MM-DD</span>)</li>
+                <li><strong>Weight</strong> — Validated as positive numeric</li>
+                <li><strong>Address corrections</strong> — DPV confirmation + correction codes returned (e.g., apartment missing)</li>
+            </ul>
         </div>
 
         <h2>API Domains</h2>
