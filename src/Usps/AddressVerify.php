@@ -62,7 +62,7 @@ class AddressVerify extends USPSBase
 
         $addr = $response['address'];
 
-        return [
+        $result = [
             'AddressValidateResponse' => [
                 'Address' => [
                     'Address2' => $addr['streetAddress'] ?? '',
@@ -74,6 +74,24 @@ class AddressVerify extends USPSBase
                 ],
             ],
         ];
+
+        if (!empty($response['corrections'])) {
+            $result['corrections'] = $response['corrections'];
+        }
+
+        if (!empty($response['additionalInfo'])) {
+            $result['additionalInfo'] = $response['additionalInfo'];
+        }
+
+        if (!empty($response['warnings'])) {
+            $result['warnings'] = $response['warnings'];
+        }
+
+        if (!empty($response['matches'])) {
+            $result['matches'] = $response['matches'];
+        }
+
+        return $result;
     }
 
     /**

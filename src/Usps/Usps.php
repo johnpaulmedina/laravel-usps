@@ -50,7 +50,23 @@ class Usps
         $verify->verify();
 
         if ($verify->isSuccess()) {
-            return ['address' => $verify->getArrayResponse()['AddressValidateResponse']['Address']];
+            $parsed = $verify->getArrayResponse();
+            $result = ['address' => $parsed['AddressValidateResponse']['Address']];
+
+            if (!empty($parsed['corrections'])) {
+                $result['corrections'] = $parsed['corrections'];
+            }
+            if (!empty($parsed['additionalInfo'])) {
+                $result['additionalInfo'] = $parsed['additionalInfo'];
+            }
+            if (!empty($parsed['warnings'])) {
+                $result['warnings'] = $parsed['warnings'];
+            }
+            if (!empty($parsed['matches'])) {
+                $result['matches'] = $parsed['matches'];
+            }
+
+            return $result;
         }
 
         return ['error' => $verify->getErrorMessage()];
