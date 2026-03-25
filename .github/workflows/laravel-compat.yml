@@ -214,7 +214,7 @@ jobs:
 
       - name: Open PR
         if: steps.analyze.outputs.all_pass == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           REPORT: ${{ steps.analyze.outputs.report }}
         with:
@@ -269,7 +269,7 @@ jobs:
 
       - name: Open failure issue
         if: steps.analyze.outputs.all_pass == 'false'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           REPORT: ${{ steps.analyze.outputs.report }}
         with:

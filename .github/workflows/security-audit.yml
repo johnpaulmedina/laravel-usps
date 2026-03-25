@@ -45,7 +45,7 @@ jobs:
 
       - name: Open or update issue
         if: steps.audit.outputs.vulnerable == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           REPORT: ${{ steps.audit.outputs.report }}
         with:
@@ -106,7 +106,7 @@ jobs:
 
       - name: Close resolved issues
         if: steps.audit.outputs.vulnerable == 'false'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const { data: issues } = await github.rest.issues.listForRepo({

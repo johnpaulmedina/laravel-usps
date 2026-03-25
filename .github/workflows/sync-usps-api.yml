@@ -115,7 +115,7 @@ jobs:
 
       - name: Create Pull Request
         if: steps.diff.outputs.has_changes == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const changes = `${{ steps.diff.outputs.changes }}`;
