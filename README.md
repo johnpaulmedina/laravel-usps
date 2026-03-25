@@ -84,17 +84,109 @@ $result = Usps::validate([
     'State' => 'DC',
     'Zip' => '20500',
 ]);
+```
 
+**Response:**
+```json
+{
+    "address": {
+        "Address2": "1600 PENNSYLVANIA AVE NW",
+        "Address1": "",
+        "City": "WASHINGTON",
+        "State": "DC",
+        "Zip5": "20500",
+        "Zip4": "0005"
+    },
+    "additionalInfo": {
+        "deliveryPoint": "00",
+        "carrierRoute": "C000",
+        "DPVConfirmation": "Y",
+        "DPVCMRA": "N",
+        "business": "Y",
+        "centralDeliveryPoint": "",
+        "vacant": "N"
+    }
+}
+```
+
+> **DPVConfirmation values:** `Y` = full match, `D` = primary confirmed but apartment/suite missing, `S` = apartment present but not confirmed, `N` = no match.
+
+**When apartment is missing (e.g., multi-unit building):**
+```json
+{
+    "address": {
+        "Address2": "100 S BISCAYNE BLVD",
+        "Address1": "",
+        "City": "MIAMI",
+        "State": "FL",
+        "Zip5": "33131",
+        "Zip4": "2011"
+    },
+    "corrections": [
+        {
+            "code": "32",
+            "text": "Default address: The address you entered was found but more information is needed (such as an apartment, suite, or box number) to match to a specific address."
+        }
+    ],
+    "additionalInfo": {
+        "deliveryPoint": "99",
+        "carrierRoute": "C038",
+        "DPVConfirmation": "D",
+        "DPVCMRA": "N",
+        "business": "N",
+        "centralDeliveryPoint": "",
+        "vacant": "N"
+    }
+}
+```
+
+> **Correction codes:** `32` = apartment/suite needed, `22` = multiple addresses found.
+
+```php
 // Full address lookup (raw v3 response)
 $result = Usps::addressLookup([
     'streetAddress' => '1600 Pennsylvania Ave NW',
     'city' => 'Washington',
     'state' => 'DC',
 ]);
+```
 
+**Response:**
+```json
+{
+    "firm": "",
+    "address": {
+        "streetAddress": "1600 PENNSYLVANIA AVE NW",
+        "streetAddressAbbreviation": "1600 PENNSYLVANIA AVE NW",
+        "secondaryAddress": "",
+        "cityAbbreviation": "WASHINGTON",
+        "city": "WASHINGTON",
+        "state": "DC",
+        "ZIPCode": "20500",
+        "ZIPPlus4": "0005",
+        "urbanization": ""
+    },
+    "additionalInfo": { ... },
+    "corrections": [],
+    "matches": [{ "code": "31", "text": "Single Response - exact match" }]
+}
+```
+
+```php
 // City/State lookup by ZIP
 $result = Usps::cityStateLookup('20500');
+```
 
+**Response:**
+```json
+{
+    "city": "WASHINGTON",
+    "state": "DC",
+    "ZIPCode": "20500"
+}
+```
+
+```php
 // ZIP Code lookup by address
 $result = Usps::zipCodeLookup([
     'streetAddress' => '1600 Pennsylvania Ave NW',
@@ -102,6 +194,22 @@ $result = Usps::zipCodeLookup([
     'state' => 'DC',
 ]);
 ```
+
+**Response:**
+```json
+{
+    "firm": "",
+    "address": {
+        "streetAddress": "1600 PENNSYLVANIA AVE NW",
+        "city": "WASHINGTON",
+        "state": "DC",
+        "ZIPCode": "20500",
+        "ZIPPlus4": "0005"
+    }
+}
+```
+
+> **Note:** State names are auto-converted to abbreviations (`Florida` → `FL`). ZIP codes with dashes are auto-split (`20500-0005` → ZIP5: `20500`, ZIP4: `0005`).
 
 ### Tracking
 
