@@ -27,22 +27,7 @@ class ShippingOptions extends USPSBase
     /**
      * Search for available shipping options with pricing and delivery estimates.
      *
-     * @param array{
-     *   originZIPCode: string,
-     *   destinationZIPCode: string,
-     *   weight: float,
-     *   length: float,
-     *   width: float,
-     *   height: float,
-     *   mailClass?: string,
-     *   processingCategory?: string,
-     *   rateIndicator?: string,
-     *   destinationEntryFacilityType?: string,
-     *   priceType?: string,
-     *   accountType?: string,
-     *   accountNumber?: string,
-     *   acceptanceDate?: string,
-     * } $options
+     * @param array<string, mixed> $options
      * @return array<string, mixed>
      *
      * @throws \InvalidArgumentException if required fields are missing or weight is invalid
