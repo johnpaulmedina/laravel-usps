@@ -25,14 +25,14 @@ class Adjustments extends USPSBase
      * @param array{destinationZIPCode?: string} $options
      * @return array<string, mixed>
      *
-     * @throws \InvalidArgumentException if eventType is invalid
+     * @throws \Johnpaulmedina\Usps\Exceptions\ValidationException if eventType is invalid
      */
     public function getAdjustments(string $crid, string $trackingNumber, string $eventType, array $options = []): array
     {
         $eventType = strtoupper(trim($eventType));
 
         if (!in_array($eventType, self::VALID_EVENT_TYPES, true)) {
-            throw new \InvalidArgumentException(
+            throw new \Johnpaulmedina\Usps\Exceptions\ValidationException(
                 "Invalid eventType: {$eventType}. Must be one of: " . implode(', ', self::VALID_EVENT_TYPES) . "."
             );
         }

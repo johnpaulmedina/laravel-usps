@@ -17,7 +17,7 @@ class DomesticPricesTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Cache::put('usps_oauth_token_' . md5('test-id_prices'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . hash('sha256', 'test-id_prices'), 'fake-token', 3600);
     }
 
     private function api(): DomesticPrices
@@ -77,7 +77,7 @@ class DomesticPricesTest extends TestCase
 
     public function test_base_rate_search_throws_for_negative_weight(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\Johnpaulmedina\Usps\Exceptions\ValidationException::class);
         $this->expectExceptionMessage('weight must be greater than 0');
 
         $this->api()->baseRateSearch(['originZIPCode' => '20500', 'weight' => -1]);
@@ -85,7 +85,7 @@ class DomesticPricesTest extends TestCase
 
     public function test_base_rate_search_throws_for_non_numeric_weight(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\Johnpaulmedina\Usps\Exceptions\ValidationException::class);
         $this->expectExceptionMessage('weight must be numeric');
 
         $this->api()->baseRateSearch(['weight' => 'abc']);
@@ -103,7 +103,7 @@ class DomesticPricesTest extends TestCase
 
     public function test_total_rate_search_throws_for_zero_weight(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\Johnpaulmedina\Usps\Exceptions\ValidationException::class);
         $this->expectExceptionMessage('weight must be greater than 0');
 
         $this->api()->totalRateSearch(['weight' => 0]);

@@ -18,8 +18,8 @@ class AdjustmentsDisputesTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Cache::put('usps_oauth_token_' . md5('test-id_adjustments'), 'fake-token', 3600);
-        Cache::put('usps_oauth_token_' . md5('test-id_disputes'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . hash('sha256', 'test-id_adjustments'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . hash('sha256', 'test-id_disputes'), 'fake-token', 3600);
     }
 
     public function test_get_adjustments(): void
@@ -51,7 +51,7 @@ class AdjustmentsDisputesTest extends TestCase
 
     public function test_get_adjustments_throws_for_invalid_event_type(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\Johnpaulmedina\Usps\Exceptions\ValidationException::class);
         $this->expectExceptionMessage('Invalid eventType: INVALID');
 
         $api = new Adjustments('test-id', 'test-secret');

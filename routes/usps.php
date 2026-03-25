@@ -29,7 +29,10 @@ use Johnpaulmedina\Usps\Http\Controllers\TrackingController;
 |
 */
 
-Route::prefix('api/usps')->name('usps.')->group(function (): void {
+Route::prefix('api/usps')
+    ->middleware(config('usps.route_middleware', ['api']))
+    ->name('usps.')
+    ->group(function (): void {
 
     // Address endpoints
     Route::prefix('address')->name('address.')->group(function (): void {

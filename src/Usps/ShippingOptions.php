@@ -30,14 +30,14 @@ class ShippingOptions extends USPSBase
      * @param array<string, mixed> $options
      * @return array<string, mixed>
      *
-     * @throws \InvalidArgumentException if required fields are missing or weight is invalid
+     * @throws \Johnpaulmedina\Usps\Exceptions\ValidationException if required fields are missing or weight is invalid
      */
     public function search(array $options): array
     {
         $required = ['originZIPCode', 'destinationZIPCode', 'weight', 'length', 'width', 'height'];
         foreach ($required as $field) {
             if (!array_key_exists($field, $options) || empty($options[$field])) {
-                throw new \InvalidArgumentException("Missing required field: {$field}.");
+                throw new \Johnpaulmedina\Usps\Exceptions\ValidationException("Missing required field: {$field}.");
             }
         }
 
