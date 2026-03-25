@@ -109,7 +109,14 @@ $result = Usps::validate([
 }
 ```
 
-> **DPVConfirmation values:** `Y` = full match, `D` = primary confirmed but apartment/suite missing, `S` = apartment present but not confirmed, `N` = no match.
+> **DPV (Delivery Point Validation)** confirms whether a specific address is a real USPS deliverable location — down to the apartment/suite level.
+>
+> | Code | Meaning |
+> |------|---------|
+> | `Y` | Full match — both street and unit confirmed |
+> | `D` | Primary address confirmed, apartment/suite **missing** |
+> | `S` | Primary confirmed, apartment/suite provided but **doesn't match** |
+> | `N` | Not a valid delivery point |
 
 **When apartment is missing (e.g., multi-unit building):**
 ```json
