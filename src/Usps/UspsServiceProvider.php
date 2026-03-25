@@ -18,6 +18,17 @@ class UspsServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../../config/usps.php' => config_path('usps.php'),
         ], 'usps-config');
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                Commands\ValidateAddressCommand::class,
+                Commands\TrackPackageCommand::class,
+                Commands\ZipLookupCommand::class,
+                Commands\PriceCalculatorCommand::class,
+                Commands\ServiceStandardsCommand::class,
+                Commands\FindLocationsCommand::class,
+            ]);
+        }
     }
 
     public function register(): void

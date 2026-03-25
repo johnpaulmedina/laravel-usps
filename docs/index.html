@@ -395,6 +395,27 @@ USPS_CLIENT_SECRET=your-client-secret</code></pre>
             </ul>
         </div>
 
+        <h2>Artisan Commands</h2>
+        <div class="card">
+            <pre><code># Validate an address
+php artisan usps:validate "1600 Pennsylvania Ave NW" --state=DC --zip=20500
+
+# Track packages
+php artisan usps:track 9400111899223456789012
+
+# ZIP code lookup
+php artisan usps:zip 33101
+
+# Calculate shipping rates
+php artisan usps:price 20500 33101 16 --mail-class=PRIORITY_MAIL
+
+# Delivery estimates
+php artisan usps:standards 20500 33101
+
+# Find USPS locations
+php artisan usps:locations 33101 --type=post-office --radius=5</code></pre>
+        </div>
+
         <h2>Requirements</h2>
         <table>
             <tbody>

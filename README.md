@@ -420,6 +420,28 @@ $form = Usps::scanForms()->createManifestMidShipment([
 | Shipping Options | `shippingOptions()` | 1 |
 | SCAN Forms | `scanForms()` | 3 |
 
+## Artisan Commands
+
+```bash
+# Validate an address
+php artisan usps:validate "1600 Pennsylvania Ave NW" --state=DC --zip=20500
+
+# Track packages
+php artisan usps:track 9400111899223456789012
+
+# ZIP code lookup (city/state)
+php artisan usps:zip 33101
+
+# Calculate shipping rates
+php artisan usps:price 20500 33101 16 --mail-class=PRIORITY_MAIL
+
+# Delivery estimates
+php artisan usps:standards 20500 33101
+
+# Find USPS locations
+php artisan usps:locations 33101 --type=post-office --radius=5
+```
+
 ## Authentication
 
 The package automatically handles OAuth2 client credentials flow. Access tokens are cached per-scope for ~50 minutes to minimize token requests. Each API domain requests only the scopes it needs.
