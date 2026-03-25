@@ -17,7 +17,7 @@ class AppointmentsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Cache::put('usps_oauth_token_' . md5('test-id_fast-appointments'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . hash('sha256', 'test-id_fast-appointments'), 'fake-token', 3600);
     }
 
     private function api(): Appointments

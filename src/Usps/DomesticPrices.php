@@ -23,7 +23,7 @@ class DomesticPrices extends USPSBase
      * @param array<string, mixed> $rateIngredients
      * @return array<string, mixed>
      *
-     * @throws \InvalidArgumentException if weight is present and invalid
+     * @throws \Johnpaulmedina\Usps\Exceptions\ValidationException if weight is present and invalid
      */
     public function baseRateSearch(array $rateIngredients): array
     {
@@ -48,7 +48,7 @@ class DomesticPrices extends USPSBase
      * @param array<string, mixed> $rateIngredients
      * @return array<string, mixed>
      *
-     * @throws \InvalidArgumentException if weight is present and invalid
+     * @throws \Johnpaulmedina\Usps\Exceptions\ValidationException if weight is present and invalid
      */
     public function baseRateListSearch(array $rateIngredients): array
     {
@@ -62,7 +62,7 @@ class DomesticPrices extends USPSBase
      * @param array<string, mixed> $rateIngredients
      * @return array<string, mixed>
      *
-     * @throws \InvalidArgumentException if weight is present and invalid
+     * @throws \Johnpaulmedina\Usps\Exceptions\ValidationException if weight is present and invalid
      */
     public function totalRateSearch(array $rateIngredients): array
     {
@@ -76,7 +76,7 @@ class DomesticPrices extends USPSBase
      * @param array<string, mixed> $rateIngredients
      * @return array<string, mixed>
      *
-     * @throws \InvalidArgumentException if weight is present and invalid
+     * @throws \Johnpaulmedina\Usps\Exceptions\ValidationException if weight is present and invalid
      */
     public function letterRateSearch(array $rateIngredients): array
     {

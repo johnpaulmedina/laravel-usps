@@ -20,10 +20,10 @@ class ServiceStandardsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Cache::put('usps_oauth_token_' . md5('test-id_service-standards'), 'fake-token', 3600);
-        Cache::put('usps_oauth_token_' . md5('test-id_service-standards-directory'), 'fake-token', 3600);
-        Cache::put('usps_oauth_token_' . md5('test-id_service-standards-files'), 'fake-token', 3600);
-        Cache::put('usps_oauth_token_' . md5('test-id_international-service-standard'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . hash('sha256', 'test-id_service-standards'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . hash('sha256', 'test-id_service-standards-directory'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . hash('sha256', 'test-id_service-standards-files'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . hash('sha256', 'test-id_international-service-standard'), 'fake-token', 3600);
     }
 
     public function test_get_estimates(): void
@@ -172,7 +172,7 @@ class ServiceStandardsTest extends TestCase
 
     public function test_international_service_standard_throws_for_invalid_country(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\Johnpaulmedina\Usps\Exceptions\ValidationException::class);
         $this->expectExceptionMessage('Invalid country code: ZZ.');
 
         $iss = new InternationalServiceStandards('test-id', 'test-secret');

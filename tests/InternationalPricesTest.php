@@ -17,7 +17,7 @@ class InternationalPricesTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Cache::put('usps_oauth_token_' . md5('test-id_international-prices'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . hash('sha256', 'test-id_international-prices'), 'fake-token', 3600);
     }
 
     private function api(): InternationalPrices
@@ -77,7 +77,7 @@ class InternationalPricesTest extends TestCase
 
     public function test_base_rate_search_throws_for_negative_weight(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\Johnpaulmedina\Usps\Exceptions\ValidationException::class);
         $this->expectExceptionMessage('weight must be greater than 0');
 
         $this->api()->baseRateSearch(['destinationCountryCode' => 'CA', 'weight' => -1]);

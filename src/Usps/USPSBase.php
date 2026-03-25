@@ -12,6 +12,9 @@ namespace Johnpaulmedina\Usps;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Johnpaulmedina\Usps\Exceptions\AuthenticationException;
+use Johnpaulmedina\Usps\Exceptions\ConfigurationException;
 
 abstract class USPSBase
 {
@@ -47,9 +50,13 @@ abstract class USPSBase
             return $this->accessToken;
         }
 
-        $cacheKey = 'usps_oauth_token_' . md5($this->clientId . '_' . $this->scope);
+        $cacheKey = 'usps_oauth_token_' . hash('sha256', $this->clientId . '_' . $this->scope);
 
-        $this->accessToken = Cache::remember($cacheKey, 3000, function (): string {
+        $this->accessToken = Cache::remember($cacheKey, 2700, function (): string {
+            if (empty($this->clientId) || empty($this->clientSecret)) {
+                throw new ConfigurationException('USPS API credentials not configured. Set USPS_CLIENT_ID and USPS_CLIENT_SECRET.');
+            }
+
             $response = Http::asForm()->post(self::API_URL . self::TOKEN_URL, [
                 'grant_type' => 'client_credentials',
                 'client_id' => $this->clientId,
@@ -58,7 +65,11 @@ abstract class USPSBase
             ]);
 
             if (!$response->successful()) {
-                throw new \RuntimeException('USPS OAuth token request failed: ' . $response->body());
+                Log::error('USPS OAuth token request failed', [
+                    'status' => $response->status(),
+                    'scope' => $this->scope,
+                ]);
+                throw new AuthenticationException('USPS OAuth token request failed (HTTP ' . $response->status() . ').', $response->status());
             }
 
             return $response->json('access_token');

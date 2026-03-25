@@ -18,8 +18,8 @@ class CampaignsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Cache::put('usps_oauth_token_' . md5('test-id_informed-delivery-campaigns'), 'fake-token', 3600);
-        Cache::put('usps_oauth_token_' . md5('test-id_informed-delivery-package-campaigns'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . hash('sha256', 'test-id_informed-delivery-campaigns'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . hash('sha256', 'test-id_informed-delivery-package-campaigns'), 'fake-token', 3600);
     }
 
     public function test_create_mail_campaign(): void

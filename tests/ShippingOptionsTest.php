@@ -17,7 +17,7 @@ class ShippingOptionsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Cache::put('usps_oauth_token_' . md5('test-id_shipments'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . hash('sha256', 'test-id_shipments'), 'fake-token', 3600);
     }
 
     private function client(): ShippingOptions
@@ -118,7 +118,7 @@ class ShippingOptionsTest extends TestCase
 
     public function test_search_throws_for_missing_required_field(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\Johnpaulmedina\Usps\Exceptions\ValidationException::class);
         $this->expectExceptionMessage('Missing required field: weight.');
 
         $this->client()->search([
@@ -132,7 +132,7 @@ class ShippingOptionsTest extends TestCase
 
     public function test_search_throws_for_negative_weight(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\Johnpaulmedina\Usps\Exceptions\ValidationException::class);
         $this->expectExceptionMessage('weight must be greater than 0');
 
         $this->client()->search([
@@ -169,7 +169,7 @@ class ShippingOptionsTest extends TestCase
 
     public function test_search_throws_for_non_numeric_weight(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\Johnpaulmedina\Usps\Exceptions\ValidationException::class);
 
         $this->client()->search([
             'originZIPCode' => '20500',

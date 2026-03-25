@@ -22,11 +22,11 @@ class CommandsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Cache::put('usps_oauth_token_' . md5('test-id_addresses'), 'fake-token', 3600);
-        Cache::put('usps_oauth_token_' . md5('test-id_tracking'), 'fake-token', 3600);
-        Cache::put('usps_oauth_token_' . md5('test-id_prices'), 'fake-token', 3600);
-        Cache::put('usps_oauth_token_' . md5('test-id_service-standards'), 'fake-token', 3600);
-        Cache::put('usps_oauth_token_' . md5('test-id_locations'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . hash('sha256', 'test-id_addresses'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . hash('sha256', 'test-id_tracking'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . hash('sha256', 'test-id_prices'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . hash('sha256', 'test-id_service-standards'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . hash('sha256', 'test-id_locations'), 'fake-token', 3600);
     }
 
     public function test_validate_address_command(): void

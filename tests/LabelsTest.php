@@ -17,7 +17,7 @@ class LabelsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Cache::put('usps_oauth_token_' . md5('test-id_labels'), 'fake-token', 3600);
+        Cache::put('usps_oauth_token_' . hash('sha256', 'test-id_labels'), 'fake-token', 3600);
     }
 
     private function labels(): Labels

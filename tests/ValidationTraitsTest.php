@@ -140,7 +140,7 @@ class ValidationTraitsTest extends TestCase
 
     public function test_validate_positive_float_throws_for_non_numeric(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\Johnpaulmedina\Usps\Exceptions\ValidationException::class);
         $this->expectExceptionMessage('weight must be numeric');
 
         $this->numericHelper()->validatePositiveFloat('abc', 'weight');
@@ -148,7 +148,7 @@ class ValidationTraitsTest extends TestCase
 
     public function test_validate_positive_float_throws_for_zero(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\Johnpaulmedina\Usps\Exceptions\ValidationException::class);
         $this->expectExceptionMessage('weight must be greater than 0');
 
         $this->numericHelper()->validatePositiveFloat(0, 'weight');
@@ -156,7 +156,7 @@ class ValidationTraitsTest extends TestCase
 
     public function test_validate_positive_float_throws_for_negative(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\Johnpaulmedina\Usps\Exceptions\ValidationException::class);
         $this->expectExceptionMessage('weight must be greater than 0');
 
         $this->numericHelper()->validatePositiveFloat(-5, 'weight');
