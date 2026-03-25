@@ -1,63 +1,50 @@
 <?php
 
 /**
- * Based on Vincent Gabriel @VinceG USPS PHP-Api https://github.com/VinceG/USPS-php-api
+ * USPS ZIP Code Lookup API v3
+ * GET /addresses/v3/zipcode
  *
- * @since  1.0
+ * @since  2.0
  * @author John Paul Medina
- * @author Vincent Gabriel
  */
 
 namespace Johnpaulmedina\Usps;
 
-/**
- * USPS Zip code lookup by city/state
- * used to find a zip code by city/state lookup
- *
- * @since  1.0
- * @author Vincent Gabriel
- */
 class ZipCodeLookup extends USPSBase
 {
-    /**
-     * @var string - the api version used for this type of call
-     */
-    protected $apiVersion = 'ZipCodeLookup';
-    /**
-     * @var array - list of all addresses added so far
-     */
-    protected $addresses = [];
+    protected array $addresses = [];
 
-    /**
-     * Perform the API call
-     *
-     * @return string
-     */
-    public function lookup()
+    public function addAddress(Address $address): self
     {
-        return $this->doRequest();
+        $this->addresses[] = $address;
+        return $this;
     }
 
     /**
-     * returns array of all addresses added so far
-     *
-     * @return array
+     * Lookup ZIP code for the first address added.
      */
-    public function getPostFields()
+    public function lookup(): array
+    {
+        if (empty($this->addresses)) {
+            $this->errorCode = 1;
+            $this->errorMessage = 'No address provided.';
+            return [];
+        }
+
+        $address = $this->addresses[0];
+
+        $query = array_filter([
+            'streetAddress' => $address->getAddress(),
+            'secondaryAddress' => $address->getApt(),
+            'city' => $address->getCity(),
+            'state' => $address->getState(),
+        ]);
+
+        return $this->apiGet('/addresses/v3/zipcode', $query);
+    }
+
+    public function getPostFields(): array
     {
         return $this->addresses;
-    }
-
-    /**
-     * Add Address to the stack
-     *
-     * @param Address $data
-     * @param string  $id the address unique id
-     */
-    public function addAddress(Address $data, $id = null)
-    {
-        $packageId = $id !== null ? $id : ((count($this->addresses) + 1));
-
-        $this->addresses['Address'][] = array_merge(['@attributes' => ['ID' => $packageId]], $data->getAddressInfo());
     }
 }

@@ -1,52 +1,36 @@
-<?php 
+<?php
 
 /**
- * Based on Vincent Gabriel @VinceG USPS PHP-Api https://github.com/VinceG/USPS-php-api
+ * USPS API v3 — Laravel Service Provider
  *
- * @since  1.0
+ * @since  2.0
  * @author John Paul Medina
- * @author Vincent Gabriel
  */
 
 namespace Johnpaulmedina\Usps;
 
 use Illuminate\Support\ServiceProvider;
 
-class UspsServiceProvider extends ServiceProvider {
-
-    /**
-     * Indicates if loading of the provider is deferred.
-     *
-     * @var bool
-     */
-    protected $defer = false;
-
-    /**
-     * Register the service provider.
-     *
-     * @return void
-     */
-    public function register()
+class UspsServiceProvider extends ServiceProvider
+{
+    public function boot(): void
     {
+        $this->publishes([
+            __DIR__ . '/../../config/usps.php' => config_path('usps.php'),
+        ], 'usps-config');
+    }
 
-        // Register manager for usage with the Facade.
+    public function register(): void
+    {
+        $this->mergeConfigFrom(__DIR__ . '/../../config/usps.php', 'usps');
+
         $this->app->singleton('usps', function () {
-            $config = \Config::get('services.usps');
-            if (!array($config)) {
-                throw new \Exception('USPS: Invalid configuration defined in services.php.');
-            }
-            return new Usps($config);
+            return new Usps(config('usps'));
         });
     }
 
-    /**
-     * Get the services provided by the provider.
-     *
-     * @return array
-     */
-    public function provides()
+    public function provides(): array
     {
-        return array('usps');
+        return ['usps'];
     }
-
 }

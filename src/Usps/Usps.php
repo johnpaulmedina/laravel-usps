@@ -1,84 +1,93 @@
 <?php
 
 /**
- * Available Laravel Methods
- * Add other USPS API Methods
- * Based on Vincent Gabriel @VinceG USPS PHP-Api https://github.com/VinceG/USPS-php-api
+ * USPS API v3 — Laravel wrapper
  *
- * @since  1.0
+ * @since  2.0
  * @author John Paul Medina
- * @author Vincent Gabriel
  */
 
 namespace Johnpaulmedina\Usps;
 
-use Johnpaulmedina\Usps\Exceptions\UspsTrackConfirmException;
+class Usps
+{
+    private array $config;
 
-class Usps {
-
-    private $config;
-
-    public function __construct($config) {
+    public function __construct(array $config)
+    {
         $this->config = $config;
     }
 
-    public function validate($request) {
+    public function validate(array $request): array
+    {
+        $verify = new AddressVerify(
+            $this->config['client_id'] ?? '',
+            $this->config['client_secret'] ?? ''
+        );
 
-        $verify = new AddressVerify($this->config['username']);
         $address = new Address;
         $address->setFirmName(null);
-        $address->setApt( (array_key_exists('Apartment', $request) ? $request['Apartment'] : null ) );
-        $address->setAddress( (array_key_exists('Address', $request) ? $request['Address'] : null ) );
-        $address->setCity( (array_key_exists('City', $request) ? $request['City'] : null ) );
-        $address->setState( (array_key_exists('State', $request) ? $request['State'] : null ) );
-        $address->setZip5( (array_key_exists('Zip', $request) ? $request['Zip'] : null ) );
-        $address->setZip4('');
+        $address->setApt($request['Apartment'] ?? $request['apartment'] ?? null);
+        $address->setAddress($request['Address'] ?? $request['address'] ?? $request['street'] ?? null);
+        $address->setCity($request['City'] ?? $request['city'] ?? null);
+        $address->setState($request['State'] ?? $request['state'] ?? null);
+        $address->setZip5($request['Zip'] ?? $request['zip'] ?? $request['zip5'] ?? null);
+        $address->setZip4($request['zip4'] ?? '');
 
-        // Add the address object to the address verify class
         $verify->addAddress($address);
+        $verify->verify();
 
-        // Perform the request and return result
-        $val1 = $verify->verify();
-        $val2 = $verify->getArrayResponse();
-
-        // var_dump($verify->isError());
-
-        // See if it was successful
         if ($verify->isSuccess()) {
-            return ['address' => $val2['AddressValidateResponse']['Address']];
-        } else {
-            return ['error' => $verify->getErrorMessage()];
+            return ['address' => $verify->getArrayResponse()['AddressValidateResponse']['Address']];
         }
 
-
+        return ['error' => $verify->getErrorMessage()];
     }
 
-    /**
-     * @param $ids array|string
-     * @param $sourceId null|string
-     *
-     * @return array
-     * @throws UspsTrackConfirmException
-     */
-    public function trackConfirm($ids, $sourceId = null)
+    public function addressLookup(array $request): array
     {
-        $trackConfirm = new TrackConfirm($this->config['username']);
-        $trackConfirm->setTestMode(empty($this->config['testmode']) ? false : true);
+        $lookup = new AddressVerify(
+            $this->config['client_id'] ?? '',
+            $this->config['client_secret'] ?? ''
+        );
 
-        if ($sourceId) {
-            // Assume revision 1 tracking is desired when sourceId supplied
-            $trackConfirm->setRevision(request()->getClientIp(), $sourceId);
-        }
+        $address = new Address;
+        $address->setAddress($request['streetAddress'] ?? $request['address'] ?? '');
+        $address->setApt($request['secondaryAddress'] ?? $request['apartment'] ?? '');
+        $address->setCity($request['city'] ?? '');
+        $address->setState($request['state'] ?? '');
+        $address->setZip5($request['ZIPCode'] ?? $request['zip'] ?? '');
 
-        collect(is_array($ids)? $ids : [ $ids ])->each(function ($id) use ($trackConfirm) {
-            $trackConfirm->addPackage($id);
-        });
+        $lookup->addAddress($address);
 
-        $trackConfirm->getTracking();
-        if ($trackConfirm->isError()) {
-            throw new UspsTrackConfirmException($trackConfirm->getErrorMessage(), $trackConfirm->getErrorCode());
-        }
+        return $lookup->verify();
+    }
 
-        return $trackConfirm->getArrayResponse();
+    public function cityStateLookup(string $zipCode): array
+    {
+        $lookup = new CityStateLookup(
+            $this->config['client_id'] ?? '',
+            $this->config['client_secret'] ?? ''
+        );
+
+        return $lookup->lookup($zipCode);
+    }
+
+    public function zipCodeLookup(array $request): array
+    {
+        $lookup = new ZipCodeLookup(
+            $this->config['client_id'] ?? '',
+            $this->config['client_secret'] ?? ''
+        );
+
+        $address = new Address;
+        $address->setAddress($request['streetAddress'] ?? $request['address'] ?? '');
+        $address->setApt($request['secondaryAddress'] ?? $request['apartment'] ?? '');
+        $address->setCity($request['city'] ?? '');
+        $address->setState($request['state'] ?? '');
+
+        $lookup->addAddress($address);
+
+        return $lookup->lookup();
     }
 }

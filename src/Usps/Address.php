@@ -1,122 +1,95 @@
 <?php
 
 /**
- * USPS Address Class
- * used across other class to create addresses represented as objects
- * Based on Vincent Gabriel @VinceG USPS PHP-Api https://github.com/VinceG/USPS-php-api
+ * USPS Address data object.
  *
- * @since  1.0
+ * @since  2.0
  * @author John Paul Medina
- * @author Vincent Gabriel
-
  */
 
 namespace Johnpaulmedina\Usps;
 
 class Address
 {
-    /**
-     * @var array list of all key=>value pairs we added so far for the current address
-     */
-    protected $addressInfo = [];
+    protected array $addressInfo = [];
 
-    /**
-     * Set the address2 property
-     *
-     * @param string|int $value
-     * @return object Address
-     */
-    public function setAddress($value)
+    public function setAddress(?string $value): self
     {
         return $this->setField('Address2', $value);
     }
 
-    /**
-     * Set the address1 property usually the apt or suit number
-     *
-     * @param string|int $value
-     * @return object Address
-     */
-    public function setApt($value)
+    public function setApt(?string $value): self
     {
         return $this->setField('Address1', $value);
     }
 
-    /**
-     * Set the city property
-     *
-     * @param string|int $value
-     * @return object Address
-     */
-    public function setCity($value)
+    public function setCity(?string $value): self
     {
         return $this->setField('City', $value);
     }
 
-    /**
-     * Set the state property
-     *
-     * @param string|int $value
-     * @return object Address
-     */
-    public function setState($value)
+    public function setState(?string $value): self
     {
         return $this->setField('State', $value);
     }
 
-    /**
-     * Set the zip4 property - zip code value represented by 4 integers
-     *
-     * @param string|int $value
-     * @return object Address
-     */
-    public function setZip4($value)
+    public function setZip4(?string $value): self
     {
         return $this->setField('Zip4', $value);
     }
 
-    /**
-     * Set the zip5 property - zip code value represented by 5 integers
-     *
-     * @param string|int $value
-     * @return object Address
-     */
-    public function setZip5($value)
+    public function setZip5(?string $value): self
     {
         return $this->setField('Zip5', $value);
     }
 
-    /**
-     * Set the firmname property
-     *
-     * @param string|int $value
-     * @return object Address
-     */
-    public function setFirmName($value)
+    public function setFirmName(?string $value): self
     {
         return $this->setField('FirmName', $value);
     }
 
-    /**
-     * Add an element to the stack
-     *
-     * @param string|int $key
-     * @param string|int $value
-     * @return object Address
-     */
-    public function setField($key, $value)
+    public function setField(string $key, ?string $value): self
     {
         $this->addressInfo[ucwords($key)] = $value;
-
         return $this;
     }
 
-    /**
-     * Returns a list of all the info we gathered so far in the current address object
-     *
-     * @return array
-     */
-    public function getAddressInfo()
+    public function getAddress(): ?string
+    {
+        return $this->addressInfo['Address2'] ?? null;
+    }
+
+    public function getApt(): ?string
+    {
+        return $this->addressInfo['Address1'] ?? null;
+    }
+
+    public function getCity(): ?string
+    {
+        return $this->addressInfo['City'] ?? null;
+    }
+
+    public function getState(): ?string
+    {
+        return $this->addressInfo['State'] ?? null;
+    }
+
+    public function getZip5(): ?string
+    {
+        return $this->addressInfo['Zip5'] ?? null;
+    }
+
+    public function getZip4(): ?string
+    {
+        return $this->addressInfo['Zip4'] ?? null;
+    }
+
+    public function getFirmName(): ?string
+    {
+        return $this->addressInfo['FirmName'] ?? null;
+    }
+
+    public function getAddressInfo(): array
     {
         return $this->addressInfo;
     }
