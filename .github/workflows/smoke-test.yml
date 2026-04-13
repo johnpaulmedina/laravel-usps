@@ -123,7 +123,7 @@ jobs:
 
       - name: Open issue on failure
         if: steps.report.outputs.all_pass == 'false'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           REPORT: ${{ steps.report.outputs.report }}
         with:
@@ -185,7 +185,7 @@ jobs:
 
       - name: Close resolved smoke test issues
         if: steps.report.outputs.all_pass == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const { data: issues } = await github.rest.issues.listForRepo({
