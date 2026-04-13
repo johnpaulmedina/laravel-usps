@@ -74,7 +74,7 @@ jobs:
           echo "EOF" >> "$GITHUB_OUTPUT"
 
       - name: Create tag and release
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           NEW_VERSION: ${{ steps.bump.outputs.new_version }}
           CHANGELOG: ${{ steps.changelog.outputs.changelog }}
